@@ -43,12 +43,24 @@ export interface OutpostState {
   science: number; // 0..SCIENCE_GOAL (can exceed, we cap at goal)
   radiationBadge: number; // mSv game units, accumulates
   crewSheltered: boolean;
+  /** Greenhouse plant health, 0..100. Tracks life support. */
+  greenhouse: number;
 }
 
 /** One row of the per-hour trace, used for animation and rewind. */
 export interface TraceRow extends OutpostState {
   /** Storm strength active this hour (0 when calm). */
   stormStrength: number;
+}
+
+/**
+ * Rover-run choice: how far (0..1) the child sends the rover before the storm.
+ * Farther gives more science but a longer trip home. If the trip home is
+ * longer than the real warning time, the crew is caught outside when the storm
+ * hits and the radiation badge fills faster.
+ */
+export interface RoverRun {
+  distance: number; // 0..1
 }
 
 export interface MissionOutcome {
