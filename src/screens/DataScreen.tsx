@@ -7,6 +7,7 @@ import {
 import { getArchive } from "../data/archive";
 import type { ArchivedStorm } from "../data/archive-types";
 import imageCredits from "../content/image-credits.json";
+import { TextPage } from "../components/TextPage";
 
 interface Props {
   lastStorm?: ArchivedStorm | null;
@@ -46,48 +47,50 @@ const UNVERIFIED = [
 export function DataScreen({ lastStorm, onBack }: Props) {
   const archive = getArchive();
   return (
-    <div className="screen data-page">
-      <h2>Our NASA data</h2>
-      <p className="disclaimer">Real NASA research data, not an official forecast.</p>
-      <p className="disclaimer">
-        The storms are real events NASA recorded. The Mars base is make-believe.
-      </p>
+    <TextPage
+      title="Our NASA data"
+      headerImage="img/base-site-map.jpg"
+      headerAlt="Jezero Crater on Mars, seen from orbit."
+      onBack={onBack}
+    >
+      <p className="quiet">Real NASA research data, not an official forecast.</p>
+      <p>The storms are real events NASA recorded. The Mars base is make-believe.</p>
 
       <ul className="dataset-list">
         {DATASETS.map((d) => (
-          <li key={d.name}>
+          <li key={d.name} className="panel">
             <strong>{d.name}</strong>
-            <span>{d.drives}</span>
+            <span className="quiet">{d.drives}</span>
             <a href={d.link} target="_blank" rel="noreferrer noopener">
-              Data from NASA →
+              Data from NASA
             </a>
           </li>
         ))}
       </ul>
 
       {lastStorm && (
-        <section className="card">
-          <h3 className="card-title">The storm you just played</h3>
-          <p className="card-body">
+        <section className="panel">
+          <h3>The storm you just played</h3>
+          <p>
             {lastStorm.flareClass}
             {lastStorm.magnitude} flare, {lastStorm.peakTime.slice(0, 10)}.
             <br />
             Event id: {lastStorm.id}
             <br />
             <a href={lastStorm.link} target="_blank" rel="noreferrer noopener">
-              DONKI record →
+              DONKI record
             </a>
           </p>
         </section>
       )}
 
-      <section className="card muted">
-        <h3 className="card-title">⚠️ Unverified numbers</h3>
-        <p className="card-body">
+      <section className="panel panel-raised">
+        <h3>Unverified numbers</h3>
+        <p className="quiet">
           These radiation numbers are placeholders until real RadLab readings
           are pulled in. Badge limit {RADIATION_BADGE_LIMIT.value} (game units).
         </p>
-        <ul>
+        <ul className="prose-list">
           {UNVERIFIED.map((c, i) => (
             <li key={i}>
               {c.value}
@@ -97,9 +100,9 @@ export function DataScreen({ lastStorm, onBack }: Props) {
         </ul>
       </section>
 
-      <section className="card">
-        <h3 className="card-title">Image credits</h3>
-        <ul className="credit-list">
+      <section className="panel">
+        <h3>Image credits</h3>
+        <ul className="prose-list">
           {imageCredits.images.map((img) => (
             <li key={img.nasaId}>
               <a href={img.link} target="_blank" rel="noreferrer noopener">
@@ -111,14 +114,10 @@ export function DataScreen({ lastStorm, onBack }: Props) {
         </ul>
       </section>
 
-      <p className="disclaimer">
+      <p className="quiet">
         Storm archive: {archive.storms.length} real flares, {archive.from} to{" "}
         {archive.to}. No NASA logo is used.
       </p>
-
-      <button type="button" className="big-button" onClick={onBack}>
-        Back
-      </button>
-    </div>
+    </TextPage>
   );
 }

@@ -25,9 +25,7 @@ export function RoverTrack({ distance, onChange, safeFraction, showNumbers }: Pr
           className="rover-dot"
           style={{ left: `${distance * 100}%` }}
           aria-hidden="true"
-        >
-          🤖
-        </div>
+        />
       </div>
       <input
         type="range"

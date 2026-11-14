@@ -1,63 +1,18 @@
+/*
+ * Legacy screen styles, kept during the UI redesign while screens migrate to
+ * the token system (tokens.css + base.css). The old variable names below are
+ * aliased to the new design tokens so existing class rules stay consistent
+ * with the new palette until each screen is rebuilt in Group 2.
+ */
 :root {
-  --bg: #0b0d17;
-  --panel: #141829;
-  --panel-2: #1b2036;
-  --ink: #eaf0ff;
-  --ink-dim: #a7b0cf;
-  --accent: #ffd24a;
-  --blue: #3b8ee6;
-  --warn: #ff6b6b;
-  --ok: #4ad295;
-  --radius: 14px;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  margin: 0;
-  min-height: 100%;
-}
-
-body {
-  background: var(--bg);
-  color: var(--ink);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  font-size: 18px;
-  line-height: 1.4;
-}
-
-/* Real NASA Mars photo as a dimmed, fixed backdrop behind the whole game. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    linear-gradient(rgba(6, 8, 18, 0.72), rgba(6, 8, 18, 0.9)),
-    url("/img/mars-backdrop.jpg") center / cover no-repeat;
-}
-
-.app {
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 12px 14px 32px;
-}
-
-.app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.app-header h1 {
-  font-size: 1.4rem;
-  letter-spacing: 0.04em;
-  margin: 0;
+  --bg: var(--ground);
+  --panel: var(--surface);
+  --panel-2: var(--surface-raised);
+  --ink-dim: var(--ink-quiet);
+  --blue: var(--shielding);
+  --warn: var(--danger);
+  --ok: var(--life-support);
+  --radius: var(--radius-panel);
 }
 
 /* Every tappable control is at least 48px tall for small fingers. */
@@ -71,25 +26,40 @@ button,
   cursor: pointer;
 }
 
+/* Legacy button, restyled to match the new system (round, token colours).
+   Secondary screens still use this until each is migrated to <Button />. */
 .big-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space);
   width: 100%;
-  margin-top: 14px;
-  padding: 14px;
+  min-height: 48px;
+  margin-top: var(--space);
+  padding: 0 calc(var(--space) * 3);
   border: none;
-  border-radius: var(--radius);
-  background: var(--blue);
-  color: white;
+  border-radius: var(--radius-button);
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--size-body);
   font-weight: 700;
+  cursor: pointer;
 }
 
 .big-button.go {
-  background: var(--ok);
-  color: #03251a;
-  font-size: 1.3rem;
+  background: var(--accent);
+  color: var(--ink-on-accent);
+}
+
+.big-button.ghost {
+  background: transparent;
+  border: 1px solid var(--surface-raised);
+  color: var(--ink);
 }
 
 .sound-toggle {
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
   border-radius: var(--radius);
   background: var(--panel);
   color: var(--ink);
@@ -100,58 +70,8 @@ button,
   margin-top: 10px;
 }
 
-/* --- Bolt --- */
-.bolt {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  background: var(--panel);
-  border-radius: var(--radius);
-  padding: 12px;
-}
-
-.bolt-face {
-  flex: 0 0 64px;
-  width: 64px;
-  height: 64px;
-  border-radius: 18px;
-  background: linear-gradient(160deg, #3b8ee6, #1d4e86);
-  display: grid;
-  place-items: center;
-  box-shadow: inset 0 0 0 3px #9fc6ff;
-}
-
-.bolt-eyes {
-  display: flex;
-  gap: 8px;
-}
-
-.bolt-eye {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #eaf6ff;
-  animation: blink 4s infinite;
-}
-
-@keyframes blink {
-  0%, 92%, 100% { transform: scaleY(1); }
-  95% { transform: scaleY(0.1); }
-}
-
-.bolt-bubble {
-  flex: 1;
-}
-
-.bolt-text {
-  margin: 0 0 8px;
-  font-size: 1.15rem;
-}
-
-.bolt-speak {
-  border: 1px solid #2b3355;
-  background: var(--panel-2);
-  color: var(--ink);
+/* --- legacy Bolt styles removed; Bolt is rebuilt in base.css --- */
+.legacy-unused-bolt {
   border-radius: 10px;
   padding: 6px 10px;
 }
@@ -163,26 +83,7 @@ button,
   margin-top: 12px;
 }
 
-.crew-card {
-  flex: 1;
-  background: var(--panel);
-  border-radius: var(--radius);
-  padding: 10px;
-  text-align: center;
-  font-size: 0.85rem;
-}
-
-.crew-portrait {
-  width: 48px;
-  height: 48px;
-  margin: 0 auto 6px;
-  border-radius: 50%;
-  background: linear-gradient(160deg, #c1623a, #7c2d12);
-  display: grid;
-  place-items: center;
-  font-size: 1.4rem;
-  font-weight: 800;
-}
+/* .crew-card and .crew-portrait are defined in base.css (new crew portraits). */
 
 .crew-role {
   display: block;
@@ -269,7 +170,7 @@ button,
   display: block;
   height: 14px;
   border-radius: 8px;
-  background: #0c0f1d;
+  background: var(--ground);
   overflow: hidden;
 }
 
@@ -288,14 +189,14 @@ button,
   margin-top: 8px;
   padding: 8px;
   border-radius: 10px;
-  background: #0c0f1d;
+  background: var(--ground);
   color: var(--ink-dim);
   text-align: center;
 }
 
 .storm-banner.on {
-  background: #4a1414;
-  color: #ffd0d0;
+  background: var(--surface-raised);
+  color: var(--danger);
   font-weight: 700;
 }
 
@@ -344,7 +245,7 @@ button,
 }
 
 .star.off {
-  color: #2b3050;
+  color: var(--surface-raised);
 }
 
 /* --- Word meanings --- */
@@ -409,7 +310,7 @@ button,
   min-height: 48px;
   background: var(--panel);
   color: var(--ink);
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
   border-radius: 10px;
   font-size: 1rem;
   padding: 0 8px;
@@ -434,16 +335,10 @@ button,
   min-height: 48px;
   background: var(--panel);
   color: var(--ink);
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
   border-radius: 10px;
   padding: 0 10px;
   font-size: 1rem;
-}
-
-.big-button.ghost {
-  background: transparent;
-  border: 1px solid #2b3355;
-  color: var(--ink);
 }
 
 .parent-note,
@@ -455,7 +350,7 @@ button,
 }
 
 .warn-text {
-  color: #ffb4b4;
+  color: var(--danger);
   font-size: 0.95rem;
   margin: 8px 0;
 }
@@ -477,7 +372,7 @@ button,
   gap: 8px;
   text-align: center;
   background: var(--panel);
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
   border-radius: var(--radius);
   color: var(--ink);
   padding: 10px;
@@ -498,7 +393,7 @@ button,
 .featured-slot {
   flex: 1;
   background: var(--panel);
-  border: 1px dashed #3b8ee6;
+  border: 1px dashed var(--shielding);
   border-radius: 10px;
   color: var(--ink);
   padding: 10px;
@@ -516,7 +411,7 @@ button,
   min-height: 48px;
   background: var(--panel);
   color: var(--ink);
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
   border-radius: 10px;
   padding: 0 10px;
   font-size: 1rem;
@@ -528,8 +423,8 @@ button,
   margin-left: 8px;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #4a3a14;
-  color: #ffd98a;
+  background: var(--surface-raised);
+  color: var(--accent);
   font-size: 0.7rem;
   vertical-align: middle;
 }
@@ -572,7 +467,7 @@ button,
   width: 100%;
   display: block;
   border-radius: var(--radius);
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
 }
 
 .credited-image figcaption {
@@ -611,10 +506,10 @@ button,
 .rover-rail {
   position: relative;
   height: 28px;
-  background: #0c0f1d;
+  background: var(--ground);
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
 }
 
 .rover-safe {
@@ -642,7 +537,7 @@ button,
 }
 
 .rover-note.warn {
-  color: #ffb4b4;
+  color: var(--danger);
 }
 
 /* Dare cards */
@@ -656,16 +551,16 @@ button,
   min-height: 48px;
   padding: 8px 12px;
   border-radius: 999px;
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
   background: var(--panel);
   color: var(--ink);
   font-size: 0.85rem;
 }
 
 .dare-chip.on {
-  background: #4a3a14;
-  border-color: #ffd24a;
-  color: #ffd98a;
+  background: var(--surface-raised);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* Greenhouse + late warning */
@@ -763,7 +658,7 @@ button,
   gap: 12px;
   text-align: left;
   background: var(--panel);
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
   border-radius: var(--radius);
   color: var(--ink);
   padding: 12px;
@@ -785,7 +680,7 @@ button,
   flex: 0 0 auto;
   padding: 6px 12px;
   border-radius: 999px;
-  background: #2b3050;
+  background: var(--surface-raised);
   color: var(--ink-dim);
   font-weight: 700;
   font-size: 0.8rem;
@@ -793,7 +688,7 @@ button,
 
 .switch.on {
   background: var(--ok);
-  color: #03251a;
+  color: var(--ink-on-accent);
 }
 
 /* --- Phase 4: more missions and audiences --- */
@@ -828,7 +723,7 @@ button,
   width: 48px;
   height: 48px;
   border-radius: 10px;
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
   background: var(--panel-2);
   color: var(--ink);
   font-size: 1.4rem;

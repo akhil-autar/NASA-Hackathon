@@ -12,17 +12,11 @@ export function MissionsMenuScreen({ onPick, onBack }: Props) {
     <div className="screen">
       <Bolt text="More missions. Pick a problem to solve." />
       <div className="dash-grid">
-        <button type="button" className="dash-card" onClick={() => onPick("dust")}>
-          <span className="dash-emoji">🌫️</span>
-          Dust storm
+        <button type="button" className="dash-card" onClick={() => onPick("dust")}>          Dust storm
         </button>
-        <button type="button" className="dash-card" onClick={() => onPick("water")}>
-          <span className="dash-emoji">💧</span>
-          Water wall
+        <button type="button" className="dash-card" onClick={() => onPick("water")}>          Water wall
         </button>
-        <button type="button" className="dash-card" onClick={() => onPick("call")}>
-          <span className="dash-emoji">📞</span>
-          Call to Earth
+        <button type="button" className="dash-card" onClick={() => onPick("call")}>          Call to Earth
         </button>
       </div>
       <button type="button" className="big-button ghost" onClick={onBack}>

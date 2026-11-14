@@ -1,6 +1,5 @@
 import results from "../content/results.json";
 import type { MissionOutcome } from "../sim/types";
-import { Stars } from "./Stars";
 import { Word } from "./Word";
 
 interface Props {
@@ -9,46 +8,39 @@ interface Props {
 }
 
 /**
- * The end-of-mission result cards: What happened, Why, What it cost, then one
- * Real astronauts fact. Copy comes from results.json (brief placeholders).
+ * The three result panels — "What happened", "Why", "What it cost" — side by
+ * side on laptop and stacked on phone, plus one "Real astronauts" fact. Stars,
+ * the guess check, Rewind and Play again are owned by the mission screen.
  */
-export function ResultCards({ outcome, onPlayAgain }: Props) {
+export function ResultCards({ outcome }: Props) {
   return (
-    <div className="results">
-      <Stars count={outcome.stars} />
+    <>
+      {!outcome.success && (
+        <p className="panel result-failure">{results.failure}</p>
+      )}
 
-      {!outcome.success && <Card title="The crew flies home early">{results.failure}</Card>}
+      <div className="result-panels">
+        <Card title="What happened">{results.whatHappened}</Card>
+        <Card title="Why">
+          The Sun sent out tiny, fast bits called{" "}
+          <Word term="radiation">particles</Word>. Thick walls stop them.
+        </Card>
+        <Card title="What it cost">{results.whatItCost}</Card>
+      </div>
 
-      <Card title="What happened">{results.whatHappened}</Card>
-      <Card title="Why">
-        The Sun sent out tiny, fast bits called{" "}
-        <Word term="radiation">particles</Word>. Thick walls stop them.
-      </Card>
-      <Card title="What it cost">{results.whatItCost}</Card>
-      <Card title="Real astronauts" muted>
-        {results.realAstronautsFact}
-      </Card>
-
-      <button type="button" className="big-button" onClick={onPlayAgain}>
-        Play again
-      </button>
-    </div>
+      <section className="panel panel-raised">
+        <h3>Real astronauts</h3>
+        <p className="quiet">{results.realAstronautsFact}</p>
+      </section>
+    </>
   );
 }
 
-function Card({
-  title,
-  children,
-  muted,
-}: {
-  title: string;
-  children: React.ReactNode;
-  muted?: boolean;
-}) {
+function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className={muted ? "card muted" : "card"}>
-      <h3 className="card-title">{title}</h3>
-      <p className="card-body">{children}</p>
+    <section className="panel result-panel">
+      <h3>{title}</h3>
+      <p>{children}</p>
     </section>
   );
 }

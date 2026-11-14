@@ -8,11 +8,13 @@ import {
   RADIATION_BADGE_LIMIT,
 } from "../data/constants";
 import { Bolt } from "../components/Bolt";
-import { CreditedImage } from "../components/CreditedImage";
+import { Button } from "../components/Button";
+import { CrewPortrait, type CrewRole } from "../components/CrewPortrait";
 import { PowerTriangle } from "../components/PowerTriangle";
 import { RealStormCard } from "../components/RealStormCard";
 import { ResultCards } from "../components/ResultCards";
 import { RoverTrack } from "../components/RoverTrack";
+import { SceneSlot } from "../components/SceneSlot";
 import { ShareCard } from "../components/ShareCard";
 import { Stars } from "../components/Stars";
 import { Word } from "../components/Word";
@@ -164,22 +166,23 @@ export function MissionScreen({
     const batteryLasted = outcome.finalState.battery > 0;
     const guessWasRight = (guess === "yes") === batteryLasted;
     return (
-      <div className="screen">
+      <div className="result-screen">
+        <div className="result-head">
+          <Stars count={outcome.stars} />
+          <h2>{outcome.success ? "Mission complete" : "The crew flew home early"}</h2>
+        </div>
+
         <ResultCards outcome={outcome} onPlayAgain={reset} />
 
         {saved && saved.newBadges.length > 0 && (
-          <section className="card">
-            <h3 className="card-title">New badge!</h3>
-            <p className="card-body">
-              {saved.newBadges
-                .map((b) => `${BADGES[b]?.emoji ?? "🏅"} ${BADGES[b]?.name ?? b}`)
-                .join("  ")}
-            </p>
+          <section className="panel">
+            <h3>New badge</h3>
+            <p>{saved.newBadges.map((b) => BADGES[b]?.name ?? b).join(", ")}</p>
           </section>
         )}
 
         {guess && (
-          <p className="guess-check">
+          <p className="panel guess-check">
             Your guess: the battery would {guess === "yes" ? "last" : "not last"}{" "}
             until morning. It {batteryLasted ? "lasted" : "ran out"}.{" "}
             {guessWasRight ? "You were right!" : "Not this time."}
@@ -187,24 +190,20 @@ export function MissionScreen({
         )}
 
         {/* Rewind: try the other way and compare side by side. */}
-        <section className="card">
-          <h3 className="card-title">Rewind</h3>
-          <p className="card-body">Try the other way at the big choice.</p>
-          <div className="rewind-buttons">
-            <button
-              type="button"
-              className="big-button ghost"
+        <section className="panel">
+          <h3>Rewind</h3>
+          <p>Try the other way at the big choice.</p>
+          <div className="button-row">
+            <Button
               onClick={() => setRewindPlan({ lifeSupport: 0.2, shielding: 0.6, science: 0.2 })}
             >
               What if I shielded more?
-            </button>
-            <button
-              type="button"
-              className="big-button ghost"
+            </Button>
+            <Button
               onClick={() => setRewindPlan({ lifeSupport: 0.3, shielding: 0.2, science: 0.5 })}
             >
               What if I did more science?
-            </button>
+            </Button>
           </div>
           {rewindOutcome && (
             <div className="compare">
@@ -222,17 +221,17 @@ export function MissionScreen({
 
         {isTimeMachine && <RealStormCard storm={storm} />}
 
-        <ShareCard
-          stars={outcome.stars}
-          stormDate={storm.peakTime.slice(0, 10)}
-          stormLabel={`${storm.flareClass}${storm.magnitude} flare`}
-        />
-
-        {onExit && (
-          <button type="button" className="big-button ghost" onClick={onExit}>
-            Back to dashboard
-          </button>
-        )}
+        <div className="button-row">
+          <ShareCard
+            stars={outcome.stars}
+            stormDate={storm.peakTime.slice(0, 10)}
+            stormLabel={`${storm.flareClass}${storm.magnitude} flare`}
+          />
+          <Button variant="primary" onClick={reset}>
+            Play again
+          </Button>
+          {onExit && <Button onClick={onExit}>Back to dashboard</Button>}
+        </div>
       </div>
     );
   }
@@ -246,20 +245,32 @@ export function MissionScreen({
     );
     const justBeforeStorm = now.hour === storm.arrivalHour - 1;
     return (
-      <div className="screen">
+      <div className="mission-running">
         <h2 className="sol-clock">Hour {now.hour} of 24</h2>
+
+        <SceneSlot
+          still="img/mars-panorama.jpg"
+          alt="The Mars outpost during the mission."
+          description={`Hour ${now.hour}. Battery ${Math.round(
+            now.battery,
+          )} percent. ${strength > 0 ? "A storm is hitting the base." : "The sky is calm."}`}
+          className="mission-scene-slot"
+        />
 
         {/* Late warning: the message travels from Earth to Mars. */}
         {justBeforeStorm && (
-          <div className="late-warning">
+          <div className="panel late-warning">
             <Bolt
               autoSpeak={!boltAsleep}
+              expression="worried"
               text="A warning is coming from Earth. It takes a while to reach Mars."
             />
             <div className="signal-track" aria-hidden="true">
-              🌍 <span className="signal">📡</span> 🔴
+              <span className="signal-end">Earth</span>
+              <span className="signal" aria-hidden="true" />
+              <span className="signal-end">Mars</span>
             </div>
-            <p className="source-note">
+            <p className="quiet">
               A real message takes between {MARS_MESSAGE_DELAY_MIN.value} and{" "}
               {MARS_MESSAGE_DELAY_MAX.value} minutes to reach Mars. The game
               shortens it.
@@ -267,7 +278,7 @@ export function MissionScreen({
           </div>
         )}
 
-        <div className="outpost">
+        <div className="panel outpost">
           <Gauge label="Crew comfort" value={now.comfort} showNumbers={showNumbers} unit="" />
           <Gauge label="Battery" value={now.battery} showNumbers={showNumbers} unit="%" />
           <Gauge label="Science" value={now.science} showNumbers={showNumbers} unit=" pts" />
@@ -280,19 +291,24 @@ export function MissionScreen({
           />
           <div className="greenhouse-row">
             <span>Greenhouse</span>
-            <span aria-hidden="true">
-              {now.greenhouse > 60 ? "🌱🌱🌱" : now.greenhouse > 30 ? "🌱🌱" : "🥀"}
+            <span>
+              {now.greenhouse > 60
+                ? "Plants healthy"
+                : now.greenhouse > 30
+                  ? "Plants drooping"
+                  : "Plants wilting"}
             </span>
           </div>
           <div className={strength > 0 ? "storm-banner on" : "storm-banner"}>
-            {strength > 0 ? "☀️ STORM! Particles hitting the base." : "Sky is calm."}
+            {strength > 0 ? "Storm! Particles hitting the base." : "Sky is calm."}
           </div>
         </div>
 
         {stormPrompt && !changed && (
-          <div className="storm-change">
+          <div className="panel storm-change">
             <Bolt
               autoSpeak={!boltAsleep}
+              expression="worried"
               text="The storm is here. You can change the power once now."
             />
             <PowerTriangle
@@ -300,16 +316,16 @@ export function MissionScreen({
               battery={now.battery}
               onChange={(p) => setPlanAtStorm(p)}
             />
-            <button
-              type="button"
-              className="big-button"
+            <Button
+              variant="primary"
+              block
               onClick={() => {
                 setChanged(true);
                 setStormPrompt(false);
               }}
             >
               Keep going
-            </button>
+            </Button>
           </div>
         )}
       </div>
@@ -319,19 +335,20 @@ export function MissionScreen({
   // --- Phase: plan ---
   if (phase === "plan") {
     return (
-      <div className="screen">
-        {!boltAsleep && <Bolt text="Set the power. Then press Go." />}
+      <div className="mission-plan">
+        {!boltAsleep && <Bolt text="Set the power. Then press Go." expression="thinking" />}
         <PowerTriangle plan={plan} battery={80} onChange={setPlan} />
-        <button
-          type="button"
-          className="big-button go"
+        <Button
+          variant="primary"
+          large
+          block
           onClick={() => {
             setPhase("running");
             setHour(0);
           }}
         >
           Go
-        </button>
+        </Button>
       </div>
     );
   }
@@ -339,29 +356,32 @@ export function MissionScreen({
   // --- Phase: guess ---
   if (phase === "guess") {
     return (
-      <div className="screen">
-        <Bolt autoSpeak={!boltAsleep} text="Will the battery last until morning?" />
-        <div className="guess-buttons">
-          <button
-            type="button"
-            className="big-button"
+      <div className="mission-plan">
+        <Bolt
+          autoSpeak={!boltAsleep}
+          expression="thinking"
+          text="Will the battery last until morning?"
+        />
+        <div className="button-row">
+          <Button
+            variant="primary"
+            large
             onClick={() => {
               setGuess("yes");
               setPhase("plan");
             }}
           >
             Yes
-          </button>
-          <button
-            type="button"
-            className="big-button"
+          </Button>
+          <Button
+            large
             onClick={() => {
               setGuess("no");
               setPhase("plan");
             }}
           >
             No
-          </button>
+          </Button>
         </div>
       </div>
     );
@@ -370,75 +390,90 @@ export function MissionScreen({
   // --- Phase: rover (daily only) ---
   if (phase === "rover") {
     return (
-      <div className="screen">
-        <Bolt autoSpeak={!boltAsleep} text="Send the rover out to find rocks. But get it home before the storm!" />
+      <div className="mission-plan">
+        <Bolt
+          autoSpeak={!boltAsleep}
+          text="Send the rover out to find rocks. But get it home before the storm!"
+        />
         <RoverTrack
           distance={rover}
           onChange={setRover}
           safeFraction={warningFraction(storm)}
           showNumbers={showNumbers}
         />
-        <button
-          type="button"
-          className="big-button go"
-          onClick={() => setPhase("guess")}
-        >
+        <Button variant="primary" large block onClick={() => setPhase("guess")}>
           Rover is set
-        </button>
+        </Button>
       </div>
     );
   }
 
   // --- Phase: brief ---
   return (
-    <div className="screen">
-      <Bolt autoSpeak={!boltAsleep} text={bolt.intro}>
-        A <Word term="flare">storm</Word> is coming from the Sun. You are the
-        commander. Share the power wisely.
-      </Bolt>
+    <div className="mission-brief">
+      <aside className="mission-crew">
+        {CREW.map((c) => (
+          <CrewCard
+            key={c.role}
+            role={c.role}
+            name={crewNames?.[c.role] ?? c.defaultName}
+            line={c.line}
+          />
+        ))}
+      </aside>
 
-      <CreditedImage
-        file="img/mars-panorama.jpg"
-        alt="A wide view of the Mars surface around the outpost."
-        className="mission-scene"
-      />
-
-      <div className="crew-row">
-        <CrewCard name={crewNames?.doctor ?? crew.doctor.defaultName} role="Doctor" line={crew.doctor.line} />
-        <CrewCard name={crewNames?.engineer ?? crew.engineer.defaultName} role="Engineer" line={crew.engineer.line} />
-        <CrewCard name={crewNames?.scientist ?? crew.scientist.defaultName} role="Scientist" line={crew.scientist.line} />
+      <div className="mission-center">
+        <SceneSlot
+          still="img/mars-panorama.jpg"
+          alt="A wide view of the Mars surface around the outpost."
+          description="The Mars outpost before the storm."
+          className="mission-scene-slot"
+        />
+        <Bolt autoSpeak={!boltAsleep} expression={boltAsleep ? "asleep" : "happy"} text={bolt.intro}>
+          A <Word term="flare">storm</Word> is coming from the Sun. You are the
+          commander. Share the power wisely.
+        </Bolt>
+        <p className="quiet">{bolt.truth}</p>
       </div>
 
-      {isDaily && (
-        <section className="card">
-          <h3 className="card-title">Dare cards (each adds a star)</h3>
-          <div className="dare-row">
-            {dareContent.cards.map((c) => (
-              <button
-                key={c.id}
-                type="button"
-                className={dares.has(c.id as DareId) ? "dare-chip on" : "dare-chip"}
-                onClick={() => toggleDare(c.id as DareId)}
-              >
-                {c.name}
-              </button>
-            ))}
-          </div>
-        </section>
-      )}
-
-      <p className="truth-line">{bolt.truth}</p>
-
-      <button
-        type="button"
-        className="big-button"
-        onClick={() => setPhase(isDaily ? "rover" : "guess")}
-      >
-        I'm ready
-      </button>
+      <div className="mission-side">
+        {isDaily && (
+          <section className="panel">
+            <h3>Dare cards</h3>
+            <p className="quiet">Each one adds a star.</p>
+            <div className="dare-row">
+              {dareContent.cards.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className={dares.has(c.id as DareId) ? "dare-chip on" : "dare-chip"}
+                  onClick={() => toggleDare(c.id as DareId)}
+                >
+                  {c.name}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+        <Button
+          variant="primary"
+          large
+          block
+          onClick={() => setPhase(isDaily ? "rover" : "guess")}
+        >
+          I'm ready
+        </Button>
+      </div>
     </div>
   );
 }
+
+// Crew config for the brief, pulling names/lines from the (frozen) content.
+const CREW = [
+  { role: "doctor" as const, defaultName: crew.doctor.defaultName, line: crew.doctor.line },
+  { role: "engineer" as const, defaultName: crew.engineer.defaultName, line: crew.engineer.line },
+  { role: "scientist" as const, defaultName: crew.scientist.defaultName, line: crew.scientist.line },
+];
 
 function Gauge({
   label,
@@ -469,14 +504,26 @@ function Gauge({
   );
 }
 
-function CrewCard({ name, role, line }: { name: string; role: string; line: string }) {
+const ROLE_LABEL: Record<CrewRole, string> = {
+  doctor: "Doctor",
+  engineer: "Engineer",
+  scientist: "Scientist",
+};
+
+function CrewCard({
+  name,
+  role,
+  line,
+}: {
+  name: string;
+  role: CrewRole;
+  line: string;
+}) {
   return (
     <div className="crew-card">
-      <div className="crew-portrait" aria-hidden="true">
-        {role[0]}
-      </div>
+      <CrewPortrait role={role} name={name} />
       <strong>{name}</strong>
-      <span className="crew-role">{role}</span>
+      <span className="crew-role">{ROLE_LABEL[role]}</span>
       <p>{line}</p>
     </div>
   );

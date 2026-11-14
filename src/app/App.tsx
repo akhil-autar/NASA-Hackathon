@@ -1,5 +1,4 @@
-import { useMemo, useState } from "react";
-import { APP_NAME } from "../config";
+import { useState } from "react";
 import { toStorm } from "../data/to-storm";
 import type { ArchivedStorm } from "../data/archive-types";
 import type { Storm } from "../sim/types";
@@ -17,6 +16,7 @@ import { WaterWallScreen } from "../screens/WaterWallScreen";
 import { getArchive } from "../data/archive";
 import { TodayScreen } from "../screens/TodayScreen";
 import { WelcomeScreen } from "../screens/WelcomeScreen";
+import { TopBar, type TopBarLink } from "../components/TopBar";
 import { setSoundOn } from "../speech/speak";
 import { loadProfile, saveProfile, type Profile } from "../storage/profile";
 import { loadSettings, saveSettings, type Settings } from "../storage/settings";
@@ -116,23 +116,12 @@ export function App() {
     }
   };
 
-  const header = useMemo(
-    () => (
-      <header className="app-header">
-        <h1>{APP_NAME}</h1>
-        <button
-          type="button"
-          className="sound-toggle"
-          onClick={() => updateSettings({ soundOn: !settings.soundOn })}
-          aria-pressed={settings.soundOn}
-        >
-          {settings.soundOn ? "🔊 Sound on" : "🔇 Sound off"}
-        </button>
-      </header>
-    ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [settings.soundOn],
-  );
+  const topBarLinks: TopBarLink[] = [
+    { label: "Grown-ups", onClick: () => setView({ name: "parent" }) },
+    { label: "Class mode", onClick: () => setView({ name: "class" }) },
+    { label: "NASA data", onClick: () => setView({ name: "data" }) },
+    { label: "Settings", onClick: () => setView({ name: "settings" }) },
+  ];
 
   let body: React.ReactNode;
   switch (view.name) {
@@ -221,6 +210,7 @@ export function App() {
         <DashboardScreen
           profile={profile}
           onGo={goRoute}
+          onPlayStorm={(s) => playStorm(s, "daily")}
           onPlayBirthday={(s) => playStorm(s, "birthday")}
         />
       );
@@ -228,8 +218,14 @@ export function App() {
 
   return (
     <div className="app">
-      {header}
-      <main>{body}</main>
+      {view.name !== "welcome" && (
+        <TopBar
+          links={topBarLinks}
+          soundOn={settings.soundOn}
+          onToggleSound={() => updateSettings({ soundOn: !settings.soundOn })}
+        />
+      )}
+      <main className="app-main">{body}</main>
       <footer className="app-footer">
         <p>
           Data from NASA. Storms are real DONKI events; the Mars base is
