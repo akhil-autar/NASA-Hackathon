@@ -1,0 +1,8 @@
+{
+  "note": "PLACEHOLDER SLOTS. The team fills these in after fact-checking. Put a real DONKI flare id in `stormId` and a hand-written story in `story`. Leave as-is until then.",
+  "slots": [
+    { "stormId": "", "title": "PLACEHOLDER: featured storm 1", "story": "" },
+    { "stormId": "", "title": "PLACEHOLDER: featured storm 2", "story": "" },
+    { "stormId": "", "title": "PLACEHOLDER: featured storm 3", "story": "" }
+  ]
+}

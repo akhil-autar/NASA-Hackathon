@@ -5,9 +5,14 @@ A browser game for children aged 7–12, built for the 2026 NASA Space Apps Chal
 the crew safe. The storms are **real NASA space weather records** — the real Sun is the
 opponent. The Mars outpost is imagined.
 
-This repository is being built in phases. **Phase 1 (core loop)** is complete: the
-simulation, the Power Triangle, one real hard-coded storm, the mission flow, Bolt's voice,
-and tappable word meanings.
+This repository is being built in phases.
+
+- **Phase 1 (core loop)** — simulation, Power Triangle, one hard-coded real storm, mission
+  flow, Bolt's voice, tappable word meanings.
+- **Phase 2 (the real Sun)** — a build-time storm archive from NASA DONKI (2010→today),
+  a live-data serverless function with an archived fallback, Today's Sun, the Storm Time
+  Machine with a date picker and featured slots, the welcome screen, the birthday card, the
+  dashboard, and the Our NASA data page.
 
 > Built with AI assistance (Kiro).
 
@@ -19,9 +24,22 @@ npm run dev        # local dev server
 npm run build      # production build into dist/
 npm run preview    # preview the production build
 npm test           # run the fairness tests (Vitest)
+
+# Build-time data scripts (Node 22+, no extra deps):
+node --experimental-strip-types scripts/build-storm-archive.ts         # full 2010->today
+node --experimental-strip-types scripts/build-storm-archive.ts --demo  # last ~2 years (fast)
+node --experimental-strip-types scripts/sample-radlab.ts               # print real dose averages
 ```
 
 Deploys on Vercel (framework preset: Vite; see `vercel.json`).
+
+### Live data (Phase 2)
+
+The `/api/today` serverless function fetches the last 7 days of DONKI flares/particle
+events/geomagnetic storms using a `NASA_API_KEY` environment variable (free from
+https://api.nasa.gov). Set `NASA_API_KEY` in the Vercel project settings. Without it, or if
+the request fails, the game falls back to the newest storm in the archive, labelled
+"archived" — it never presents saved data as live.
 
 ## What Phase 1 contains
 
