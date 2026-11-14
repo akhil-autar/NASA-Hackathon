@@ -64,6 +64,13 @@ export function step(
     COMFORT_SWING_PER_HOUR.value;
   const comfort = clamp(state.comfort + comfortDelta, 0, COMFORT_MAX.value);
 
+  // --- Greenhouse: plants follow life support, more slowly ---
+  const greenhouse = clamp(
+    state.greenhouse + comfortDelta * 0.5,
+    0,
+    COMFORT_MAX.value,
+  );
+
   // --- Science ---
   const science = clamp(
     state.science + sci * SCIENCE_PER_HOUR_AT_FULL.value,
@@ -88,5 +95,6 @@ export function step(
     science,
     radiationBadge,
     crewSheltered: state.crewSheltered,
+    greenhouse,
   };
 }

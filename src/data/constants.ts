@@ -142,6 +142,22 @@ export const DOSE_RATE_BACKGROUND: Constant = {
   unverified: true,
 };
 
+// --- Rover run -----------------------------------------------------------
+// Science earned from the rover trip at full distance (added once, before the
+// storm). Longer distance = more science but a longer trip home.
+export const ROVER_SCIENCE_AT_FULL: Constant = {
+  value: 45,
+  unit: "science points",
+  source: "game estimate",
+};
+
+// --- Greenhouse ----------------------------------------------------------
+export const GREENHOUSE_START: Constant = {
+  value: 70,
+  unit: "plant health",
+  source: "game estimate",
+};
+
 // --- Storm strength mapping ---------------------------------------------
 // Real flare class -> storm strength. M is medium, X is strong, scaled by the
 // number after the letter (e.g. X2.0). Tuned so fairness tests pass.
