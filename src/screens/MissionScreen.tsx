@@ -1,20 +1,26 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import bolt from "../content/bolt.json";
 import crew from "../content/crew.json";
 import dareContent from "../content/dare-cards.json";
 import {
+  BATTERY_START,
+  COMFORT_OK,
+  GREENHOUSE_START,
+  LIFE_SUPPORT_HOLD_SHARE,
   MARS_MESSAGE_DELAY_MAX,
   MARS_MESSAGE_DELAY_MIN,
+  MISSION_HOURS,
   RADIATION_BADGE_LIMIT,
 } from "../data/constants";
 import { Bolt } from "../components/Bolt";
 import { Button } from "../components/Button";
-import { CrewPortrait, type CrewRole } from "../components/CrewPortrait";
+import { CrewPortrait, type CrewMood, type CrewRole } from "../components/CrewPortrait";
+import { MessageView } from "../components/MessageView";
+import { OutpostView } from "../components/OutpostView";
 import { PowerTriangle } from "../components/PowerTriangle";
 import { RealStormCard } from "../components/RealStormCard";
 import { ResultCards } from "../components/ResultCards";
 import { RoverTrack } from "../components/RoverTrack";
-import { SceneSlot } from "../components/SceneSlot";
 import { ShareCard } from "../components/ShareCard";
 import { Stars } from "../components/Stars";
 import { Word } from "../components/Word";
@@ -29,10 +35,24 @@ import type { MissionOutcome, Plan, Storm, TraceRow } from "../sim/types";
 import { award } from "../storage/award";
 import { BADGES, loadProgress, saveProgress } from "../storage/progress";
 import type { CrewNames } from "../storage/profile";
+import { useCan3D } from "../three/capability";
+import type { OutpostShot, OutpostVisual } from "../three/types";
 
 type Phase = "brief" | "rover" | "guess" | "plan" | "running" | "result";
 
 const START_PLAN: Plan = { lifeSupport: 0.34, shielding: 0.33, science: 0.33 };
+
+/** One game hour takes this long on screen, so the child can watch the base. */
+const TICK_MS = 900;
+/** How long the clock pauses while the warning travels from Earth to Mars. */
+const WARNING_MS = 3200;
+
+/** Which part of the base each crew member cares about. */
+const ROLE_SHOT: Record<CrewRole, OutpostShot> = {
+  doctor: "shelter",
+  engineer: "habitat",
+  scientist: "rover",
+};
 
 interface Props {
   storm: Storm;
@@ -71,6 +91,12 @@ export function MissionScreen({
   const [saved, setSaved] = useState<{ newBadges: string[]; logLine: string } | null>(
     null,
   );
+  // The late warning: the clock pauses while the message travels to Mars.
+  const [warning, setWarning] = useState(false);
+  const [warned, setWarned] = useState(false);
+  // Tapping a crew member points the camera at their part of the base.
+  const [focus, setFocus] = useState<CrewRole | null>(null);
+  const can3D = useCan3D();
 
   const dareList = [...dares];
   const boltAsleep = dares.has("boltAsleep");
@@ -116,29 +142,38 @@ export function MissionScreen({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, outcome, saved]);
 
-  // Advance one game hour per tick while running.
-  const timer = useRef<number | null>(null);
+  // Advance one game hour per tick while running. The clock pauses while the
+  // warning travels from Earth and while the child changes the plan.
+  const paused = warning || (stormPrompt && !changed);
   useEffect(() => {
-    if (phase !== "running") return;
-    timer.current = window.setInterval(() => {
+    if (phase !== "running" || paused) return;
+    const id = window.setInterval(() => {
       setHour((h) => {
         const next = h + 1;
+        if (next === storm.arrivalHour - 1 && !warned && storm.arrivalHour > 2) {
+          setWarning(true);
+        }
         if (next === storm.arrivalHour && !changed) {
           setStormPrompt(true);
-          if (timer.current) window.clearInterval(timer.current);
         }
         if (next >= trace.length) {
-          if (timer.current) window.clearInterval(timer.current);
           setPhase("result");
           return trace.length - 1;
         }
         return next;
       });
-    }, 220);
-    return () => {
-      if (timer.current) window.clearInterval(timer.current);
-    };
-  }, [phase, trace.length, storm.arrivalHour, changed]);
+    }, TICK_MS);
+    return () => window.clearInterval(id);
+  }, [phase, paused, trace.length, storm.arrivalHour, changed, warned]);
+
+  useEffect(() => {
+    if (!warning) return;
+    const id = window.setTimeout(() => {
+      setWarned(true);
+      setWarning(false);
+    }, WARNING_MS);
+    return () => window.clearTimeout(id);
+  }, [warning]);
 
   const reset = () => {
     setPhase("brief");
@@ -150,6 +185,9 @@ export function MissionScreen({
     setPlanAtStorm(undefined);
     setRewindPlan(null);
     setSaved(null);
+    setWarning(false);
+    setWarned(false);
+    setFocus(null);
   };
 
   const toggleDare = (id: DareId) => {
@@ -171,6 +209,23 @@ export function MissionScreen({
           <Stars count={outcome.stars} />
           <h2>{outcome.success ? "Mission complete" : "The crew flew home early"}</h2>
         </div>
+
+        <OutpostView
+          className="result-scene"
+          visual={{
+            lifeSupport: (planAtStorm ?? plan).lifeSupport,
+            shielding: (planAtStorm ?? plan).shielding,
+            science: (planAtStorm ?? plan).science,
+            battery: outcome.finalState.battery,
+            greenhouse: outcome.finalState.greenhouse,
+            storm: 0,
+            dust: !!dustStorm,
+            hour: 3, // the next morning
+
+            crewSheltered: true,
+            shot: "result",
+          }}
+        />
 
         <ResultCards outcome={outcome} onPlayAgain={reset} />
 
@@ -236,59 +291,197 @@ export function MissionScreen({
     );
   }
 
-  // --- Phase: running ---
-  if (phase === "running" && now) {
-    const strength = stormStrengthAtHour(storm, now.hour);
-    const badgePct = Math.min(
-      100,
-      (now.radiationBadge / RADIATION_BADGE_LIMIT.value) * 100,
+  // --- Every other phase shares one stage: crew | 3D outpost | controls ---
+  const running = phase === "running" && !!now;
+  const strength = running ? stormStrengthAtHour(storm, now.hour) : 0;
+  const activePlan =
+    running && planAtStorm && (changed || stormPrompt) && now.hour >= storm.arrivalHour
+      ? planAtStorm
+      : plan;
+  const badgePct = running
+    ? Math.min(100, (now.radiationBadge / RADIATION_BADGE_LIMIT.value) * 100)
+    : 0;
+
+  // What the 3D scene shows. Every value is game state. While planning, the
+  // scene previews the plan live so the child sees each trade-off before Go.
+  const previewGreenhouse = Math.max(
+    15,
+    Math.min(100, (plan.lifeSupport / LIFE_SUPPORT_HOLD_SHARE.value) * 80),
+  );
+  const baseShot: OutpostShot = running
+    ? strength > 0 || stormPrompt
+      ? "shelter"
+      : "wide"
+    : phase === "brief"
+      ? "intro"
+      : phase === "rover"
+        ? "rover"
+        : "wide";
+  const visual: OutpostVisual = {
+    lifeSupport: activePlan.lifeSupport,
+    shielding: activePlan.shielding,
+    science: activePlan.science,
+    battery: running ? now.battery : BATTERY_START.value,
+    greenhouse: running
+      ? now.greenhouse
+      : phase === "plan"
+        ? previewGreenhouse
+        : GREENHOUSE_START.value,
+    storm: strength,
+    dust: !!dustStorm || dares.has("dustyPanels" as DareId),
+    hour: running ? now.hour : 0,
+    crewSheltered: running ? now.crewSheltered : true,
+    roverOut: phase === "rover" ? rover : undefined,
+    shot: focus && !running ? ROLE_SHOT[focus] : baseShot,
+  };
+
+  const mood: CrewMood = running
+    ? now.comfort < COMFORT_OK.value
+      ? "cold"
+      : strength > 0
+        ? "worried"
+        : "calm"
+    : "calm";
+
+  const title = dustStorm
+    ? "Dust storm"
+    : `Solar storm, ${storm.peakTime.slice(0, 10)}`;
+
+  // --- What Bolt says, the controls, and the one main button, per phase ---
+  let boltText = bolt.intro;
+  let boltExpression: "happy" | "thinking" | "worried" | "asleep" = "happy";
+  let boltRich: ReactNode = null;
+  let controls: ReactNode = null;
+  let action: ReactNode = null;
+
+  if (phase === "brief") {
+    boltExpression = boltAsleep ? "asleep" : "happy";
+    boltRich = (
+      <>
+        A <Word term="flare">storm</Word> is coming from the Sun. You are the
+        commander. Share the power wisely.
+      </>
     );
-    const justBeforeStorm = now.hour === storm.arrivalHour - 1;
-    return (
-      <div className="mission-running">
-        <h2 className="sol-clock">Hour {now.hour} of 24</h2>
-
-        <SceneSlot
-          still="img/mars-panorama.jpg"
-          alt="The Mars outpost during the mission."
-          description={`Hour ${now.hour}. Battery ${Math.round(
-            now.battery,
-          )} percent. ${strength > 0 ? "A storm is hitting the base." : "The sky is calm."}`}
-          className="mission-scene-slot"
-        />
-
-        {/* Late warning: the message travels from Earth to Mars. */}
-        {justBeforeStorm && (
-          <div className="panel late-warning">
-            <Bolt
-              autoSpeak={!boltAsleep}
-              expression="worried"
-              text="A warning is coming from Earth. It takes a while to reach Mars."
-            />
-            <div className="signal-track" aria-hidden="true">
-              <span className="signal-end">Earth</span>
-              <span className="signal" aria-hidden="true" />
-              <span className="signal-end">Mars</span>
+    controls = (
+      <>
+        {isDaily && (
+          <section className="panel">
+            <h3>Dare cards</h3>
+            <p className="quiet">Each one adds a star.</p>
+            <div className="dare-row">
+              {dareContent.cards.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  aria-pressed={dares.has(c.id as DareId)}
+                  className={dares.has(c.id as DareId) ? "dare-chip on" : "dare-chip"}
+                  onClick={() => toggleDare(c.id as DareId)}
+                >
+                  {c.name}
+                </button>
+              ))}
             </div>
-            <p className="quiet">
-              A real message takes between {MARS_MESSAGE_DELAY_MIN.value} and{" "}
-              {MARS_MESSAGE_DELAY_MAX.value} minutes to reach Mars. The game
-              shortens it.
-            </p>
-          </div>
+          </section>
         )}
-
-        <div className="panel outpost">
-          <Gauge label="Crew comfort" value={now.comfort} showNumbers={showNumbers} unit="" />
-          <Gauge label="Battery" value={now.battery} showNumbers={showNumbers} unit="%" />
-          <Gauge label="Science" value={now.science} showNumbers={showNumbers} unit=" pts" />
-          <Gauge
-            label="Radiation badge"
-            value={badgePct}
-            warn
-            showNumbers={showNumbers}
-            unit="%"
+        <p className="quiet">{bolt.truth}</p>
+      </>
+    );
+    action = (
+      <Button variant="primary" large onClick={() => setPhase(isDaily ? "rover" : "guess")}>
+        I'm ready
+      </Button>
+    );
+  } else if (phase === "rover") {
+    boltText = "Send the rover out to find rocks. But get it home before the storm!";
+    controls = (
+      <section className="panel">
+        <RoverTrack
+          distance={rover}
+          onChange={setRover}
+          safeFraction={warningFraction(storm)}
+          showNumbers={showNumbers}
+        />
+      </section>
+    );
+    action = (
+      <Button variant="primary" large onClick={() => setPhase("guess")}>
+        Rover is set
+      </Button>
+    );
+  } else if (phase === "guess") {
+    boltText = "Will the battery last until morning?";
+    boltExpression = "thinking";
+    controls = (
+      <section className="panel guess-panel">
+        <h3>Make your guess</h3>
+        <div className="button-row">
+          <Button
+            large
+            onClick={() => {
+              setGuess("yes");
+              setPhase("plan");
+            }}
+          >
+            Yes, it will last
+          </Button>
+          <Button
+            large
+            onClick={() => {
+              setGuess("no");
+              setPhase("plan");
+            }}
+          >
+            No, it will run out
+          </Button>
+        </div>
+      </section>
+    );
+  } else if (phase === "plan") {
+    boltText = "Drag the dot to share the power. Watch the base change. Then press Go.";
+    boltExpression = "thinking";
+    controls = (
+      <section className="panel">
+        <PowerTriangle plan={plan} battery={BATTERY_START.value} onChange={setPlan} />
+      </section>
+    );
+    action = (
+      <Button
+        variant="primary"
+        large
+        onClick={() => {
+          setFocus(null);
+          setPhase("running");
+          setHour(0);
+        }}
+      >
+        Go
+      </Button>
+    );
+  } else if (running) {
+    boltExpression = strength > 0 || warning ? "worried" : "happy";
+    boltText = warning
+      ? "A warning is coming from Earth. It takes a while to reach Mars."
+      : stormPrompt && !changed
+        ? "The storm is here. You can change the power once now."
+        : strength > 0
+          ? "Storm! Tiny fast particles are hitting the base."
+          : "The sky is calm. The base is working.";
+    controls =
+      stormPrompt && !changed ? (
+        <section className="panel storm-change">
+          <h3>Change the power?</h3>
+          <PowerTriangle
+            plan={planAtStorm ?? plan}
+            battery={now.battery}
+            onChange={(p) => setPlanAtStorm(p)}
           />
+        </section>
+      ) : (
+        <section className="panel outpost">
+          <Gauge label="Crew comfort" value={now.comfort} showNumbers={showNumbers} unit="" />
+          <Gauge label="Battery" value={now.battery} showNumbers={showNumbers} unit="%" tone="accent" />
+          <Gauge label="Science" value={now.science} showNumbers={showNumbers} unit=" pts" tone="science" />
+          <Gauge label="Radiation badge" value={badgePct} warn showNumbers={showNumbers} unit="%" />
           <div className="greenhouse-row">
             <span>Greenhouse</span>
             <span>
@@ -299,170 +492,90 @@ export function MissionScreen({
                   : "Plants wilting"}
             </span>
           </div>
-          <div className={strength > 0 ? "storm-banner on" : "storm-banner"}>
-            {strength > 0 ? "Storm! Particles hitting the base." : "Sky is calm."}
-          </div>
-        </div>
-
-        {stormPrompt && !changed && (
-          <div className="panel storm-change">
-            <Bolt
-              autoSpeak={!boltAsleep}
-              expression="worried"
-              text="The storm is here. You can change the power once now."
-            />
-            <PowerTriangle
-              plan={plan}
-              battery={now.battery}
-              onChange={(p) => setPlanAtStorm(p)}
-            />
-            <Button
-              variant="primary"
-              block
-              onClick={() => {
-                setChanged(true);
-                setStormPrompt(false);
-              }}
-            >
-              Keep going
-            </Button>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // --- Phase: plan ---
-  if (phase === "plan") {
-    return (
-      <div className="mission-plan">
-        {!boltAsleep && <Bolt text="Set the power. Then press Go." expression="thinking" />}
-        <PowerTriangle plan={plan} battery={80} onChange={setPlan} />
+        </section>
+      );
+    if (stormPrompt && !changed) {
+      action = (
         <Button
           variant="primary"
           large
-          block
           onClick={() => {
-            setPhase("running");
-            setHour(0);
+            setChanged(true);
+            setStormPrompt(false);
           }}
         >
-          Go
+          Keep going
         </Button>
-      </div>
-    );
+      );
+    }
   }
 
-  // --- Phase: guess ---
-  if (phase === "guess") {
-    return (
-      <div className="mission-plan">
-        <Bolt
-          autoSpeak={!boltAsleep}
-          expression="thinking"
-          text="Will the battery last until morning?"
-        />
-        <div className="button-row">
-          <Button
-            variant="primary"
-            large
-            onClick={() => {
-              setGuess("yes");
-              setPhase("plan");
-            }}
-          >
-            Yes
-          </Button>
-          <Button
-            large
-            onClick={() => {
-              setGuess("no");
-              setPhase("plan");
-            }}
-          >
-            No
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // --- Phase: rover (daily only) ---
-  if (phase === "rover") {
-    return (
-      <div className="mission-plan">
-        <Bolt
-          autoSpeak={!boltAsleep}
-          text="Send the rover out to find rocks. But get it home before the storm!"
-        />
-        <RoverTrack
-          distance={rover}
-          onChange={setRover}
-          safeFraction={warningFraction(storm)}
-          showNumbers={showNumbers}
-        />
-        <Button variant="primary" large block onClick={() => setPhase("guess")}>
-          Rover is set
-        </Button>
-      </div>
-    );
-  }
-
-  // --- Phase: brief ---
   return (
-    <div className="mission-brief">
-      <aside className="mission-crew">
+    <div className={`mission phase-${phase}`}>
+      <div className="mission-head">
+        {onExit && (
+          <button type="button" className="topbar-link" onClick={onExit}>
+            Back
+          </button>
+        )}
+        <h2 className="mission-title">{title}</h2>
+        <span className="sol-clock" aria-live="off">
+          {running ? `Hour ${now.hour} of ${MISSION_HOURS.value}` : "Before the storm"}
+        </span>
+      </div>
+
+      <aside className="mission-crew" aria-label="Your crew">
         {CREW.map((c) => (
           <CrewCard
             key={c.role}
             role={c.role}
             name={crewNames?.[c.role] ?? c.defaultName}
             line={c.line}
+            mood={mood}
+            selected={focus === c.role}
+            onSelect={() => setFocus((f) => (f === c.role ? null : c.role))}
           />
         ))}
       </aside>
 
-      <div className="mission-center">
-        <SceneSlot
-          still="img/mars-panorama.jpg"
-          alt="A wide view of the Mars surface around the outpost."
-          description="The Mars outpost before the storm."
-          className="mission-scene-slot"
-        />
-        <Bolt autoSpeak={!boltAsleep} expression={boltAsleep ? "asleep" : "happy"} text={bolt.intro}>
-          A <Word term="flare">storm</Word> is coming from the Sun. You are the
-          commander. Share the power wisely.
-        </Bolt>
-        <p className="quiet">{bolt.truth}</p>
-      </div>
-
-      <div className="mission-side">
-        {isDaily && (
-          <section className="panel">
-            <h3>Dare cards</h3>
-            <p className="quiet">Each one adds a star.</p>
-            <div className="dare-row">
-              {dareContent.cards.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  className={dares.has(c.id as DareId) ? "dare-chip on" : "dare-chip"}
-                  onClick={() => toggleDare(c.id as DareId)}
-                >
-                  {c.name}
-                </button>
-              ))}
-            </div>
-          </section>
+      <OutpostView visual={visual} className="mission-stage">
+        {running && (
+          <span className={strength > 0 ? "stage-chip danger" : "stage-chip"}>
+            {strength > 0 ? "Storm" : "Calm"}
+          </span>
         )}
-        <Button
-          variant="primary"
-          large
-          block
-          onClick={() => setPhase(isDaily ? "rover" : "guess")}
+        {warning && (
+          <div className="stage-warning panel">
+            {can3D ? (
+              <MessageView loopSeconds={WARNING_MS / 1000} />
+            ) : (
+              <div className="signal-track" aria-hidden="true">
+                <span className="signal-end">Earth</span>
+                <span className="signal" />
+                <span className="signal-end">Mars</span>
+              </div>
+            )}
+            <p className="quiet">
+              A real message takes between {MARS_MESSAGE_DELAY_MIN.value} and{" "}
+              {MARS_MESSAGE_DELAY_MAX.value} minutes to reach Mars. The game
+              shortens it.
+            </p>
+          </div>
+        )}
+      </OutpostView>
+
+      <div className="mission-controls">{controls}</div>
+
+      <div className="mission-bolt">
+        <Bolt
+          key={boltText}
+          autoSpeak={!boltAsleep}
+          expression={boltAsleep ? "asleep" : boltExpression}
+          text={boltText}
         >
-          I'm ready
-        </Button>
+          {boltRich}
+        </Bolt>
+        {action && <div className="mission-action">{action}</div>}
       </div>
     </div>
   );
@@ -481,12 +594,14 @@ function Gauge({
   warn,
   showNumbers,
   unit,
+  tone,
 }: {
   label: string;
   value: number;
   warn?: boolean;
   showNumbers?: boolean;
   unit?: string;
+  tone?: "accent" | "science";
 }) {
   return (
     <div className="gauge">
@@ -496,7 +611,7 @@ function Gauge({
       </span>
       <span className="gauge-bar">
         <span
-          className={warn ? "gauge-fill warn" : "gauge-fill"}
+          className={warn ? "gauge-fill warn" : tone ? `gauge-fill ${tone}` : "gauge-fill"}
           style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
         />
       </span>
@@ -514,17 +629,30 @@ function CrewCard({
   name,
   role,
   line,
+  mood,
+  selected,
+  onSelect,
 }: {
   name: string;
   role: CrewRole;
   line: string;
+  mood: CrewMood;
+  selected: boolean;
+  onSelect: () => void;
 }) {
   return (
-    <div className="crew-card">
-      <CrewPortrait role={role} name={name} />
-      <strong>{name}</strong>
-      <span className="crew-role">{ROLE_LABEL[role]}</span>
-      <p>{line}</p>
-    </div>
+    <button
+      type="button"
+      className={selected ? "crew-card selected" : "crew-card"}
+      aria-pressed={selected}
+      onClick={onSelect}
+    >
+      <CrewPortrait role={role} name={name} mood={mood} />
+      <span className="crew-text">
+        <strong>{name}</strong>
+        <span className="crew-role">{ROLE_LABEL[role]}</span>
+        <span className="crew-line">{line}</span>
+      </span>
+    </button>
   );
 }

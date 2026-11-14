@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Bolt } from "../components/Bolt";
 import { Button } from "../components/Button";
-import { SceneSlot } from "../components/SceneSlot";
+import { SunView } from "../components/SunView";
 import { Stars } from "../components/Stars";
 import { StormTimeline } from "../components/StormTimeline";
 import { nearestStorm, ARCHIVE_START_YEAR } from "../data/archive";
@@ -9,6 +9,8 @@ import type { ArchivedStorm } from "../data/archive-types";
 import { strengthWords, useToday } from "../data/useToday";
 import type { Profile } from "../storage/profile";
 import { BADGES, loadProgress } from "../storage/progress";
+import { useCan3D } from "../three/capability";
+import { activityFor } from "../three/types";
 
 export type DashRoute =
   | "today"
@@ -36,6 +38,9 @@ export function DashboardScreen({
   const progress = loadProgress();
   const { data, status } = useToday();
   const [logOpen, setLogOpen] = useState(false);
+  // The storm under the Time Machine handle. While set, the Sun shows it.
+  const [scrubbed, setScrubbed] = useState<ArchivedStorm | null>(null);
+  const can3D = useCan3D();
 
   const storm = data?.storm ?? null;
   const strength = storm
@@ -53,19 +58,41 @@ export function DashboardScreen({
             ? `The newest real storm was ${strength}.`
             : "No storm to show right now.";
 
-  const sunDescription = storm
-    ? `The Sun. ${todayLine} Flare class ${storm.flareClass}${storm.magnitude}.`
+  // The Sun shows the storm under the timeline handle, or else today's storm.
+  const shown = scrubbed ?? storm;
+  const shownWords = shown ? strengthWords(shown.flareClass, shown.magnitude) : null;
+  const sunCaption = scrubbed
+    ? `${scrubbed.peakTime.slice(0, 10)}: ${shownWords}`
+    : status === "loading"
+      ? "Looking at the Sun"
+      : storm && data?.live && data.daysAgo === 0
+        ? `Today: ${shownWords}`
+        : storm
+          ? `${storm.peakTime.slice(0, 10)}: ${shownWords}`
+          : "The Sun is quiet";
+  const sunDescription = shown
+    ? `The Sun. ${sunCaption}. Flare class ${shown.flareClass}${shown.magnitude}.`
     : "The Sun, quiet.";
+  const sunVisual = {
+    activity: activityFor(shown?.flareClass ?? null, shown?.magnitude ?? 0),
+    seed: shown ? Date.parse(shown.peakTime) % 100000 : 1,
+  };
 
   return (
     <div className="dashboard">
       <div className="dash-top">
-        <SceneSlot
-          still="img/mars-backdrop.jpg"
-          alt="The Sun, seen from space."
-          description={sunDescription}
-          className="dash-sun"
-        />
+        <SunView visual={sunVisual} description={sunDescription} className="dash-sun">
+          <div className="sun-caption">
+            <span className="sun-caption-main">{sunCaption}</span>
+            {shown && (
+              <span className="quiet">
+                Real flare, class {shown.flareClass}
+                {shown.magnitude}
+              </span>
+            )}
+          </div>
+          {can3D && <span className="sun-hint quiet">Drag to turn the Sun</span>}
+        </SunView>
 
         <div className="dash-side">
           <Bolt text="Welcome back, Commander." expression="happy" />
@@ -115,7 +142,7 @@ export function DashboardScreen({
 
       <section className="panel dash-timeline">
         <h2>Storm Time Machine</h2>
-        <StormTimeline onPick={(s) => onPlayStorm(s, false)} />
+        <StormTimeline onPick={(s) => onPlayStorm(s, false)} onScrub={setScrubbed} />
       </section>
 
       <section className="panel dash-stats">

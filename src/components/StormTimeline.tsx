@@ -28,13 +28,17 @@ export function StormTimeline({ onPick, onScrub }: Props) {
   const current = storms[index];
   const strength = strengthWords(current.flareClass, current.magnitude);
 
-  // X-class storms get a tick mark on the rail so strong events are visible.
+  // Every strong (X-class) storm gets a bar on the rail. Its height shows the
+  // real strength of the flare, so the biggest storms stand out.
   const ticks = useMemo(
     () =>
       storms
         .map((s, i) => ({ s, i }))
         .filter(({ s }) => s.flareClass === "X")
-        .map(({ i }) => (i / (storms.length - 1)) * 100),
+        .map(({ s, i }) => ({
+          left: (i / (storms.length - 1)) * 100,
+          height: Math.min(40, 8 + Math.sqrt(s.magnitude) * 10),
+        })),
     [storms],
   );
 
@@ -49,8 +53,12 @@ export function StormTimeline({ onPick, onScrub }: Props) {
   return (
     <div className="timeline">
       <div className="timeline-rail" aria-hidden="true">
-        {ticks.map((left, i) => (
-          <span key={i} className="timeline-tick" style={{ left: `${left}%` }} />
+        {ticks.map((t, i) => (
+          <span
+            key={i}
+            className="timeline-tick"
+            style={{ left: `${t.left}%`, height: `${t.height}px` }}
+          />
         ))}
       </div>
       <input

@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { Bolt } from "../components/Bolt";
+import { hasWebGL, load3DSetting, save3DSetting } from "../three/capability";
 import type { Settings } from "../storage/settings";
 
 interface Props {
@@ -8,6 +10,7 @@ interface Props {
 }
 
 export function SettingsScreen({ settings, onChange, onBack }: Props) {
+  const [graphics, setGraphics] = useState(load3DSetting);
   return (
     <div className="screen">
       <Bolt text="Settings. You can change how the game looks and sounds." />
@@ -23,6 +26,18 @@ export function SettingsScreen({ settings, onChange, onBack }: Props) {
         on={settings.showNumbers}
         onToggle={() => onChange({ showNumbers: !settings.showNumbers })}
       />
+
+      {hasWebGL() && (
+        <Toggle
+          label="3D graphics"
+          hint="Turn off if the game feels slow. You will see photos instead."
+          on={graphics}
+          onToggle={() => {
+            save3DSetting(!graphics);
+            setGraphics(!graphics);
+          }}
+        />
+      )}
 
       <button type="button" className="big-button" onClick={onBack}>
         Back
