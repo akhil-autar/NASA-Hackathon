@@ -1,4 +1,5 @@
 import { Bolt } from "../components/Bolt";
+import { CreditedImage } from "../components/CreditedImage";
 import { nearestStorm, ARCHIVE_START_YEAR } from "../data/archive";
 import type { ArchivedStorm } from "../data/archive-types";
 import type { Profile } from "../storage/profile";
@@ -33,6 +34,12 @@ export function DashboardScreen({ profile, onGo, onPlayBirthday }: Props) {
   return (
     <div className="screen dashboard">
       <Bolt text="Welcome back, Commander. What shall we do?" />
+
+      <CreditedImage
+        file="img/base-site-map.jpg"
+        alt="Mars from above: Jezero Crater, a real landing site. Our base sits here."
+        className="base-map"
+      />
 
       <div className="dash-grid">
         <button type="button" className="dash-card" onClick={() => onGo("today")}>

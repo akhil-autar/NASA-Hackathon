@@ -72,6 +72,12 @@ the request fails, the game falls back to the newest storm in the archive, label
 No NASA logo is used. Data is credited as "Data from NASA" with links. A full dataset
 README comes at the Finish phase.
 
+### Imagery
+
+Real, free-to-use NASA/JPL Mars photos live in `public/img/` (a dimmed surface backdrop, a
+mission panorama, and the Jezero Crater base-site map). Each is credited on the data page
+via `src/content/image-credits.json`. No NASA logo is used.
+
 ## Privacy
 
 No accounts, no login, no analytics, nothing sent to any server. Settings are stored only

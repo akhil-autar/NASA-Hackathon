@@ -1,0 +1,26 @@
+{
+  "note": "Real, free-to-use NASA imagery in public/img/. Each is credited on the data page. No NASA logo is used.",
+  "images": [
+    {
+      "file": "img/mars-backdrop.jpg",
+      "title": "A Picture Postcard From Curiosity's Navcams",
+      "nasaId": "PIA24937",
+      "credit": "NASA/JPL-Caltech",
+      "link": "https://images.nasa.gov/details/PIA24937"
+    },
+    {
+      "file": "img/mars-panorama.jpg",
+      "title": "Rover Panorama Taken Amid Murray Buttes on Mars",
+      "nasaId": "PIA20840",
+      "credit": "NASA/JPL-Caltech/MSSS",
+      "link": "https://images.nasa.gov/details/PIA20840"
+    },
+    {
+      "file": "img/base-site-map.jpg",
+      "title": "Jezero Crater, Mars 2020's Landing Site",
+      "nasaId": "PIA23239",
+      "credit": "NASA/JPL-Caltech",
+      "link": "https://images.nasa.gov/details/PIA23239"
+    }
+  ]
+}

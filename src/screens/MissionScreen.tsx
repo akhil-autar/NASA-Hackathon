@@ -9,6 +9,7 @@ import { Word } from "../components/Word";
 import { initialState, runMission } from "../sim/mission";
 import { stormStrengthAtHour } from "../sim/storm";
 import { RealStormCard } from "../components/RealStormCard";
+import { CreditedImage } from "../components/CreditedImage";
 import type { MissionOutcome, Plan, Storm, TraceRow } from "../sim/types";
 import type { CrewNames } from "../storage/profile";
 
@@ -220,6 +221,12 @@ export function MissionScreen({
         A <Word term="flare">storm</Word> is coming from the Sun. You are the
         commander. Share the power wisely.
       </Bolt>
+
+      <CreditedImage
+        file="img/mars-panorama.jpg"
+        alt="A wide view of the Mars surface around the outpost."
+        className="mission-scene"
+      />
 
       <div className="crew-row">
         <CrewCard
