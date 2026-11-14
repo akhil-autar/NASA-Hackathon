@@ -355,6 +355,16 @@ button,
   margin: 8px 0;
 }
 
+/* The archived-storm fallback notice (shown when NASA's live data fails). */
+.offline-note {
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  border-radius: var(--radius-panel);
+  font-size: 0.9rem;
+}
+
 /* Dashboard */
 .dash-grid {
   display: grid;

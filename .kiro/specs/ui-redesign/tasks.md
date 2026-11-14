@@ -59,9 +59,9 @@ _Done when: the section-11 checklist passes._
 - [x] 5.1 `Reveal` staggered entrances; meter easing; camera moves (push-in, storm cut, wide
   result) — all gated by reduced motion.
 - [x] 5.2 Control hover/press/focus feedback everywhere.
-- [ ] 5.3 In-scene interactions: rover-run drag with trip-vs-warning line; water tanks drag &
+- [x] 5.3 In-scene interactions: rover-run drag with trip-vs-warning line; water tanks drag &
   empty; wait-or-act hold.
-- [ ] 5.4 Loading / error / offline states for each screen (incl. archived-storm message).
+- [x] 5.4 Loading / error / offline states for each screen (incl. archived-storm message).
 - [ ] 5.5 Final pass: screenshots, full checklist, performance numbers; report. **STOP.**
 
 _If time or credits run short, stop after group 2 or 3 — the game must look finished at the

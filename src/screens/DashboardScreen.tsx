@@ -100,8 +100,16 @@ export function DashboardScreen({
           <section className="panel dash-today">
             <h2>Today's Sun</h2>
             <p>{todayLine}</p>
-            {!data?.live && storm && status !== "loading" && (
-              <p className="quiet">Showing an archived storm.</p>
+            {status === "error" && storm ? (
+              <p className="quiet offline-note" role="status">
+                NASA's data could not be reached. Showing an archived storm.
+              </p>
+            ) : (
+              !data?.live &&
+              storm &&
+              status !== "loading" && (
+                <p className="quiet">Showing an archived storm.</p>
+              )
             )}
             <Button
               variant="primary"
