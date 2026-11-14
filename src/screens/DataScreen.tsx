@@ -6,6 +6,7 @@ import {
 } from "../data/constants";
 import { getArchive } from "../data/archive";
 import type { ArchivedStorm } from "../data/archive-types";
+import imageCredits from "../content/image-credits.json";
 
 interface Props {
   lastStorm?: ArchivedStorm | null;
@@ -91,6 +92,20 @@ export function DataScreen({ lastStorm, onBack }: Props) {
             <li key={i}>
               {c.value}
               {c.unit ? ` ${c.unit}` : ""} — UNVERIFIED
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="card">
+        <h3 className="card-title">Image credits</h3>
+        <ul className="credit-list">
+          {imageCredits.images.map((img) => (
+            <li key={img.nasaId}>
+              <a href={img.link} target="_blank" rel="noreferrer noopener">
+                {img.title}
+              </a>{" "}
+              — {img.credit}
             </li>
           ))}
         </ul>

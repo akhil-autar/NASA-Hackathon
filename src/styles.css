@@ -30,6 +30,17 @@ body {
   line-height: 1.4;
 }
 
+/* Real NASA Mars photo as a dimmed, fixed backdrop behind the whole game. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(rgba(6, 8, 18, 0.72), rgba(6, 8, 18, 0.9)),
+    url("/img/mars-backdrop.jpg") center / cover no-repeat;
+}
+
 .app {
   max-width: 520px;
   margin: 0 auto;
@@ -549,5 +560,43 @@ button,
 
 .dataset-list a,
 .source-note a {
+  color: var(--blue);
+}
+
+/* --- Credited NASA images --- */
+.credited-image {
+  margin: 12px 0;
+}
+
+.credited-image img {
+  width: 100%;
+  display: block;
+  border-radius: var(--radius);
+  border: 1px solid #2b3355;
+}
+
+.credited-image figcaption {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--ink-dim);
+}
+
+.credited-image.base-map img {
+  max-height: 180px;
+  object-fit: cover;
+}
+
+.credited-image.mission-scene img {
+  max-height: 120px;
+  object-fit: cover;
+}
+
+.credit-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.85rem;
+}
+
+.credit-list a {
   color: var(--blue);
 }
