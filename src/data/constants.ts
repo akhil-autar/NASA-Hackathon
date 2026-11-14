@@ -1,7 +1,5 @@
 // Every number the simulation uses lives here, each with a `source`.
 // A source is either a real URL or the literal "game estimate".
-// Radiation values that are not yet checked against real RadLab readings are
-// marked UNVERIFIED; the data page shows that flag.
 
 export interface Constant {
   value: number;
@@ -107,39 +105,43 @@ export const SCIENCE_PER_HOUR_AT_FULL: Constant = {
   source: "game estimate",
 };
 
-// --- Radiation (UNVERIFIED until RadLab sampler is run in Phase 2) -------
-// Placeholder values based on the shape of RadLab fields (uGy/hour,
-// uSv/hour). These MUST be replaced with real averages and un-flagged.
+// --- Radiation ----------------------------------------------------------
+// The radiation badge is measured in real units (mSv) and anchored to real
+// NASA numbers. The storm dose rate and the shield leakage are game estimates,
+// clearly labelled, sized so a strong unshielded storm can break the NASA limit.
+
+// The badge is "full" at NASA's short-term limit for one solar particle event.
 export const RADIATION_BADGE_LIMIT: Constant = {
-  value: 100,
-  unit: "mSv (game units)",
-  source: "game estimate",
-  note: "The badge 'fills' at this amount; a real dose limit comes later.",
+  value: 250,
+  unit: "mSv",
+  source:
+    "https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf",
+  note: "NASA-STD-3001: crew dose from one solar particle event must stay under 250 mSv.",
 };
 
-// Dose rate the badge gains each storm hour when fully unshielded, scaled by
-// storm strength. Replace with RadLab-derived numbers in Phase 2.
+// Dose the badge gains each storm hour when fully unshielded, scaled by
+// storm strength (from the real DONKI flare class).
 export const DOSE_RATE_UNSHIELDED: Constant = {
-  value: 4,
-  unit: "mSv / storm hour (game units)",
-  source: "https://visualization.osdr.nasa.gov/radlab/api",
-  unverified: true,
-  note: "Placeholder. Replace with RadLab absorbed/equivalent dose averages.",
+  value: 10,
+  unit: "mSv / storm hour",
+  source: "game estimate",
+  note: "Sized so a strong storm with no shielding passes NASA's 250 mSv limit.",
 };
 
 // Fraction of dose let through at a full (100%) Shielding share (0 = perfect).
 export const SHIELD_LEAKAGE_AT_FULL: Constant = {
   value: 0.08,
   source: "game estimate",
-  unverified: true,
+  note: "A full storm shelter (water and regolith walls) lets about 8% through.",
 };
 
-// Background dose per hour when there is no storm.
+// Background dose per hour when there is no storm: the real everyday dose on
+// the surface of Mars, measured by Curiosity's RAD instrument.
 export const DOSE_RATE_BACKGROUND: Constant = {
-  value: 0.3,
-  unit: "mSv / hour (game units)",
-  source: "https://visualization.osdr.nasa.gov/radlab/api",
-  unverified: true,
+  value: 0.027,
+  unit: "mSv / hour",
+  source: "https://doi.org/10.1126/science.1244797",
+  note: "Curiosity RAD measured 0.64 mSv per day at Gale Crater (Hassler et al. 2014, Science).",
 };
 
 // --- Rover run -----------------------------------------------------------

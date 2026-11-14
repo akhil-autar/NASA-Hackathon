@@ -1,3 +1,4 @@
+import { useT } from "../i18n";
 import { useCallback, useRef } from "react";
 import type { Plan } from "../sim/types";
 
@@ -67,6 +68,7 @@ function sharesAt(x: number, y: number): Plan {
 }
 
 export function PowerTriangle({ plan, battery, onChange, disabled }: Props) {
+  const t = useT();
   const svgRef = useRef<SVGSVGElement>(null);
   const dot = dotFor(plan);
 
@@ -118,7 +120,7 @@ export function PowerTriangle({ plan, battery, onChange, disabled }: Props) {
         className="triangle-svg"
         role="slider"
         tabIndex={disabled ? -1 : 0}
-        aria-label="Power Triangle. Drag or use arrow keys to share power."
+        aria-label={t("tri.aria")}
         aria-valuetext={`Life support ${pct(plan.lifeSupport)}, shielding ${pct(
           plan.shielding,
         )}, science ${pct(plan.science)}`}
@@ -155,13 +157,13 @@ export function PowerTriangle({ plan, battery, onChange, disabled }: Props) {
         <circle cx="90" cy="90" r="3" fill="var(--science)" />
         {/* Corner labels */}
         <text x="50" y="6" className="tri-label" textAnchor="middle" fill="var(--life-support)">
-          Life support
+          {t("tri.life")}
         </text>
         <text x="8" y="100" className="tri-label" textAnchor="start" fill="var(--shielding)">
-          Shielding
+          {t("tri.shield")}
         </text>
         <text x="92" y="100" className="tri-label" textAnchor="end" fill="var(--science)">
-          Science
+          {t("tri.science")}
         </text>
         {/* The accent dot with a spring follow */}
         <circle
@@ -177,17 +179,17 @@ export function PowerTriangle({ plan, battery, onChange, disabled }: Props) {
       <div className="triangle-shares">
         <span className="tri-share">
           <span className="tri-swatch" style={{ background: "var(--life-support)" }} />
-          Life support {pct(plan.lifeSupport)}
+          {t("tri.life")} {pct(plan.lifeSupport)}
         </span>
         <span className="tri-share">
           <span className="tri-swatch" style={{ background: "var(--shielding)" }} />
-          Shielding {pct(plan.shielding)}
+          {t("tri.shield")} {pct(plan.shielding)}
         </span>
         <span className="tri-share">
           <span className="tri-swatch" style={{ background: "var(--science)" }} />
-          Science {pct(plan.science)}
+          {t("tri.science")} {pct(plan.science)}
         </span>
-        <span className="battery-readout">Battery {Math.round(battery)}%</span>
+        <span className="battery-readout">{t("tri.battery", { n: Math.round(battery) })}</span>
       </div>
     </div>
   );

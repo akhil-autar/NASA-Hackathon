@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 import { TEXTURES } from "./assets";
 import { isSmallScreen } from "./capability";
-import type { OutpostShot, OutpostVisual } from "./types";
+import type { OutpostShot, OutpostVisual, PlayerVisual } from "./types";
 import { damp, dampVec, fbm, loadOptionalTexture, makeNoise2D, seeded } from "./util";
 
 // ---------------------------------------------------------------------------
@@ -819,6 +819,147 @@ function Crew({ live, crewSheltered }: { live: Live; crewSheltered: boolean }) {
   );
 }
 
+
+// --- The player: the commander at the command post --------------------------
+
+const COMMAND_POST = new THREE.Vector3(-0.6, 0, 9.2);
+
+function Commander({ live, player }: { live: Live; player: PlayerVisual }) {
+  const body = useRef<THREE.Group>(null);
+  const shield = useRef<THREE.MeshStandardMaterial>(null);
+  const hitGlow = useRef<THREE.PointLight>(null);
+  const hitMat = useRef<THREE.MeshStandardMaterial>(null);
+  const fall = useRef(0);
+  const down = player.state === "down";
+
+  useFrame(({ clock }, dtRaw) => {
+    const dt = Math.min(dtRaw, 0.1);
+    const t = clock.elapsedTime;
+    fall.current = damp(fall.current, down ? 1 : 0, down ? 2.2 : 6, dt);
+    const g = body.current;
+    if (g) {
+      // Tip over backwards from the feet when knocked out.
+      g.rotation.x = fall.current * Math.PI * 0.47;
+      // Shake while the storm is hitting, before landing.
+      const shaking = down && fall.current < 0.85;
+      g.position.x = shaking ? Math.sin(t * 55) * 0.05 : 0;
+      g.position.y = down ? 0 : Math.abs(Math.sin(t * 1.7)) * 0.025;
+      g.rotation.y = down ? 0 : Math.sin(t * 0.45) * 0.35;
+    }
+    // A blue bubble shows how much the shelter power is protecting you.
+    if (shield.current) {
+      const on = live.storm > 0.05 && !down;
+      const target = on ? 0.08 + live.shielding * 0.32 : 0;
+      shield.current.opacity = damp(shield.current.opacity, target, 4, dt);
+    }
+    // Red flashes when the radiation gets you.
+    const flash = down ? 0.5 + 0.5 * Math.sin(t * 10) : 0;
+    if (hitGlow.current) hitGlow.current.intensity = down ? 2 + flash * 4 : 0;
+    if (hitMat.current) hitMat.current.emissiveIntensity = flash * 1.4;
+  });
+
+  const suit = player.suit;
+  const trim = player.trim;
+  return (
+    <group position={COMMAND_POST}>
+      {/* Command console in front of the player */}
+      <group position={[0, 0, -0.9]}>
+        <mesh position={[0, 0.5, 0]} castShadow>
+          <boxGeometry args={[1.1, 1.0, 0.45]} />
+          <meshStandardMaterial color="#2a2d33" roughness={0.6} metalness={0.4} />
+        </mesh>
+        <mesh position={[0, 1.08, 0.05]} rotation={[-0.6, 0, 0]}>
+          <boxGeometry args={[1.0, 0.04, 0.5]} />
+          <meshStandardMaterial color="#111" emissive={C.shielding} emissiveIntensity={1.4} />
+        </mesh>
+      </group>
+
+      <group ref={body} scale={1.3}>
+        {/* legs */}
+        <mesh position={[-0.11, 0.26, 0]} castShadow>
+          <capsuleGeometry args={[0.09, 0.3, 4, 10]} />
+          <meshStandardMaterial ref={hitMat} color={suit} emissive={C.danger} emissiveIntensity={0} roughness={0.7} />
+        </mesh>
+        <mesh position={[0.11, 0.26, 0]} castShadow>
+          <capsuleGeometry args={[0.09, 0.3, 4, 10]} />
+          <meshStandardMaterial color={suit} roughness={0.7} />
+        </mesh>
+        {/* body */}
+        <mesh position={[0, 0.72, 0]} castShadow>
+          <capsuleGeometry args={[0.22, 0.38, 6, 12]} />
+          <meshStandardMaterial color={suit} roughness={0.7} />
+        </mesh>
+        <mesh position={[0, 0.62, 0]}>
+          <cylinderGeometry args={[0.235, 0.235, 0.08, 16]} />
+          <meshStandardMaterial color={trim} roughness={0.6} />
+        </mesh>
+        {/* arms */}
+        <mesh position={[-0.3, 0.76, 0]} rotation={[0, 0, 0.25]} castShadow>
+          <capsuleGeometry args={[0.07, 0.32, 4, 8]} />
+          <meshStandardMaterial color={suit} roughness={0.7} />
+        </mesh>
+        <mesh position={[0.3, 0.76, 0]} rotation={[0, 0, -0.25]} castShadow>
+          <capsuleGeometry args={[0.07, 0.32, 4, 8]} />
+          <meshStandardMaterial color={suit} roughness={0.7} />
+        </mesh>
+        {/* backpack */}
+        <mesh position={[0, 0.8, 0.24]} castShadow>
+          <boxGeometry args={[0.36, 0.44, 0.18]} />
+          <meshStandardMaterial color={trim} roughness={0.7} />
+        </mesh>
+        {/* helmet + visor (facing -z, toward the base) */}
+        <mesh position={[0, 1.22, 0]} castShadow>
+          <sphereGeometry args={[0.23, 20, 16]} />
+          <meshStandardMaterial color="#f4f3ef" roughness={0.45} />
+        </mesh>
+        <mesh position={[0, 1.22, -0.11]}>
+          <sphereGeometry args={[0.17, 18, 12]} />
+          <meshStandardMaterial color={player.visor} roughness={0.12} metalness={0.85} />
+        </mesh>
+        {player.extra === "antenna" && (
+          <group position={[0.12, 1.42, 0]}>
+            <mesh position={[0, 0.12, 0]}>
+              <cylinderGeometry args={[0.012, 0.012, 0.26, 6]} />
+              <meshStandardMaterial color={trim} />
+            </mesh>
+            <mesh position={[0, 0.26, 0]}>
+              <sphereGeometry args={[0.04, 10, 8]} />
+              <meshStandardMaterial color="#ffae1a" emissive={C.accent} emissiveIntensity={1.5} />
+            </mesh>
+          </group>
+        )}
+        {player.extra === "lamp" && (
+          <mesh position={[0, 1.4, -0.12]}>
+            <boxGeometry args={[0.12, 0.07, 0.07]} />
+            <meshStandardMaterial color="#fff6b0" emissive="#fff6b0" emissiveIntensity={2} />
+          </mesh>
+        )}
+        {player.extra === "fin" && (
+          <mesh position={[0, 1.44, 0.02]}>
+            <boxGeometry args={[0.04, 0.12, 0.34]} />
+            <meshStandardMaterial color={trim} />
+          </mesh>
+        )}
+        <pointLight ref={hitGlow} position={[0, 0.9, 0]} color="#ff3b2f" distance={4} intensity={0} />
+      </group>
+
+      {/* Shield bubble */}
+      <mesh position={[0, 1.0, 0]}>
+        <sphereGeometry args={[1.05, 24, 16]} />
+        <meshStandardMaterial
+          ref={shield}
+          color={C.shielding}
+          emissive={C.shielding}
+          emissiveIntensity={0.6}
+          transparent
+          opacity={0}
+          depthWrite={false}
+        />
+      </mesh>
+    </group>
+  );
+}
+
 // --- Weather: dust and the solar storm --------------------------------------
 
 function Dust({ live }: { live: Live }) {
@@ -984,6 +1125,8 @@ const SHOTS: Record<Exclude<OutpostShot, "intro">, { pos: THREE.Vector3; look: T
   rover: { pos: new THREE.Vector3(11, 3.4, 17), look: new THREE.Vector3(11, 0.6, 8.4) },
   habitat: { pos: new THREE.Vector3(8.5, 2.6, 10), look: new THREE.Vector3(2.6, 1.3, 1.2) },
   result: { pos: new THREE.Vector3(18, 9, 20), look: new THREE.Vector3(0, 1, 1) },
+  commander: { pos: new THREE.Vector3(2.2, 3.6, 15.4), look: new THREE.Vector3(-1.4, 0.9, 3.4) },
+  fall: { pos: new THREE.Vector3(3.4, 2.1, 12.4), look: new THREE.Vector3(-1.4, 0.3, 7.9) },
 };
 
 function CameraRig({ shot, live }: { shot: OutpostShot; live: Live }) {
@@ -994,6 +1137,13 @@ function CameraRig({ shot, live }: { shot: OutpostShot; live: Live }) {
   const goalLook = useMemo(() => new THREE.Vector3(), []);
 
   useEffect(() => {
+    if (shot === "fall") {
+      // Game over: start right at the player, no fly-in.
+      camera.position.copy(SHOTS.fall.pos).add(new THREE.Vector3(1.5, 1.2, -1.5));
+      look.current.copy(SHOTS.fall.look);
+      camera.lookAt(look.current);
+      return;
+    }
     // Start by looking up at the Sun, then tilt down to the base.
     camera.position.set(16, 5.5, 20);
     look.current.copy(live.sunDir).multiplyScalar(60).add(camera.position);
@@ -1100,6 +1250,7 @@ function World({
       <Rover live={live} roverOut={visual.roverOut} />
       {onRoverDrag && <RoverDragPlane onRoverDrag={onRoverDrag} />}
       <Crew live={live} crewSheltered={visual.crewSheltered} />
+      {visual.player && <Commander live={live} player={visual.player} />}
       <Dust live={live} />
       <StormParticles live={live} />
       <CameraRig shot={visual.shot} live={live} />

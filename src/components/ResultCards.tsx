@@ -1,36 +1,47 @@
-import results from "../content/results.json";
-import type { MissionOutcome } from "../sim/types";
-import { Word } from "./Word";
+import { useT, type T } from "../i18n";
+import { DICTS } from "../i18n/strings";
+import type { Explanation, Line } from "../sim/explain";
 
 interface Props {
-  outcome: MissionOutcome;
-  onPlayAgain: () => void;
+  explanation: Explanation;
+}
+
+/** Fill a line, translating any value that is itself a word key. */
+export function say(t: T, line: Line): string {
+  const vars: Record<string, string | number> = {};
+  for (const [k, v] of Object.entries(line.vars ?? {})) {
+    vars[k] = typeof v === "string" && v in DICTS.en ? t(v as keyof typeof DICTS.en) : v;
+  }
+  return t(line.key, vars);
 }
 
 /**
- * The three result panels — "What happened", "Why", "What it cost" — side by
- * side on laptop and stacked on phone, plus one "Real astronauts" fact. Stars,
- * the guess check, Rewind and Play again are owned by the mission screen.
+ * The result panels — "What happened", "Why", "What it cost", "Next time" —
+ * written from what really happened in this mission, plus one real
+ * astronaut fact with its NASA source.
  */
-export function ResultCards({ outcome }: Props) {
+export function ResultCards({ explanation: x }: Props) {
+  const t = useT();
   return (
     <>
-      {!outcome.success && (
-        <p className="panel result-failure">{results.failure}</p>
-      )}
-
       <div className="result-panels">
-        <Card title="What happened">{results.whatHappened}</Card>
-        <Card title="Why">
-          The Sun sent out tiny, fast bits called{" "}
-          <Word term="radiation">particles</Word>. Thick walls stop them.
-        </Card>
-        <Card title="What it cost">{results.whatItCost}</Card>
+        <Card title={t("r.whatHappened")}>{say(t, x.happened)}</Card>
+        <Card title={t("r.why")}>{say(t, x.why)}</Card>
+        <Card title={t("r.cost")}>{say(t, x.cost)}</Card>
       </div>
+      <section className={x.kind === "win" ? "panel result-tip" : "panel result-tip warn"}>
+        <h3>{t("r.tip")}</h3>
+        <p>{say(t, x.tip)}</p>
+      </section>
 
       <section className="panel panel-raised">
-        <h3>Real astronauts</h3>
-        <p className="quiet">{results.realAstronautsFact}</p>
+        <h3>{t("r.real")}</h3>
+        <p>{t(x.fact.key)}</p>
+        <p className="quiet">
+          <a href={x.fact.link} target="_blank" rel="noreferrer noopener">
+            {t("r.realLink")}
+          </a>
+        </p>
       </section>
     </>
   );

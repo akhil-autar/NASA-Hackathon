@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { speak } from "../speech/speak";
 import { Icon } from "./Icon";
+import { useT } from "../i18n";
 
 export type BoltExpression = "happy" | "thinking" | "worried" | "asleep";
 
@@ -26,6 +27,7 @@ export function Bolt({
   const [speaking, setSpeaking] = useState(false);
   const [mouthOpen, setMouthOpen] = useState(false);
   const asleep = expression === "asleep";
+  const t = useT();
 
   // Speak the line when it changes.
   useEffect(() => {
@@ -77,10 +79,10 @@ export function Bolt({
             type="button"
             className="btn btn-secondary bolt-speak"
             onClick={() => speak(text)}
-            aria-label="Hear Bolt say this"
+            aria-label={t("common.hearAria")}
           >
             <Icon name="replay" />
-            Hear it
+            {t("common.hearIt")}
           </button>
         )}
       </div>

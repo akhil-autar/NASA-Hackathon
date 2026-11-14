@@ -8,6 +8,8 @@ export type OutpostShot =
   | "shelter" // the storm shelter door
   | "rover" // the rover and its track
   | "habitat" // habitat and greenhouse
+  | "commander" // over the player's shoulder, at the command post
+  | "fall" // facing the player, for the game-over fall
   | "result"; // slow orbit of the whole base
 
 /** Everything the outpost scene shows. Every field is real game state. */
@@ -31,6 +33,18 @@ export interface OutpostVisual {
   /** Rover-run choice, 0..1. When set, the rover sits at this distance. */
   roverOut?: number;
   shot: OutpostShot;
+  /** The player's own astronaut, standing at the command post. */
+  player?: PlayerVisual;
+}
+
+/** How the player's astronaut looks and what is happening to them. */
+export interface PlayerVisual {
+  suit: string;
+  trim: string;
+  visor: string;
+  extra: "none" | "antenna" | "lamp" | "fin";
+  /** "down" = hit by the storm and knocked over (game over). */
+  state: "idle" | "down";
 }
 
 /** What the Sun scene shows. */

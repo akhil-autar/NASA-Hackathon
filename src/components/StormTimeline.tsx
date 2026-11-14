@@ -1,8 +1,14 @@
 import { useMemo, useState } from "react";
 import { Button } from "./Button";
-import { getArchive } from "../data/archive";
+import { getArchive, resolveFeatured } from "../data/archive";
 import type { ArchivedStorm } from "../data/archive-types";
-import { strengthWords } from "../data/useToday";
+import featured from "../content/featured-storms.json";
+import { useT, useTx, type Key } from "../i18n";
+
+function stormKey(c: "M" | "X", m: number): Key {
+  if (c === "M") return "storm.medium";
+  return m >= 5 ? "storm.giant" : "storm.strong";
+}
 
 interface Props {
   onPick: (storm: ArchivedStorm) => void;
@@ -25,8 +31,18 @@ export function StormTimeline({ onPick, onScrub }: Props) {
     return { first, last };
   }, [storms]);
 
+  const t = useT();
+  const tx = useTx();
   const current = storms[index];
-  const strength = strengthWords(current.flareClass, current.magnitude);
+  const strength = t(stormKey(current.flareClass, current.magnitude));
+  // Famous real storms, one tap away.
+  const famous = useMemo(() => {
+    const found = resolveFeatured(featured.slots.map((f) => f.stormId).filter(Boolean));
+    return found.map((st) => ({
+      storm: st,
+      slot: featured.slots.find((f) => f.stormId === st.id)!,
+    }));
+  }, []);
 
   // Every strong (X-class) storm gets a bar on the rail. Its height shows the
   // real strength of the flare, so the biggest storms stand out.
@@ -67,12 +83,12 @@ export function StormTimeline({ onPick, onScrub }: Props) {
         max={100}
         value={(index / (storms.length - 1)) * 100}
         onChange={(e) => setByValue(Number(e.target.value))}
-        aria-label="Move through the storm archive"
+        aria-label={tx("Move through the storm archive", "Gerak melalui arkib ribut")}
         className="timeline-range"
       />
       <div className="timeline-ends">
         <span className="quiet">{year}</span>
-        <span className="quiet">today</span>
+        <span className="quiet">{tx("today", "hari ini")}</span>
       </div>
       <p className="timeline-summary">
         {current.peakTime.slice(0, 10)}: {strength} (
@@ -80,8 +96,30 @@ export function StormTimeline({ onPick, onScrub }: Props) {
         {current.magnitude}).
       </p>
       <Button variant="secondary" onClick={() => onPick(current)}>
-        Go to this day
+        {tx("Go to this day", "Pergi ke hari ini")}
       </Button>
+      {famous.length > 0 && (
+        <div className="famous-storms">
+          <span className="quiet">{tx("Famous real storms", "Ribut sebenar yang terkenal")}</span>
+          <div className="featured-row">
+            {famous.map(({ storm: st, slot }) => (
+              <button
+                key={st.id}
+                type="button"
+                className="featured-slot"
+                title={tx(slot.story, slot.story_ms)}
+                onClick={() => onPick(st)}
+              >
+                <strong>
+                  {st.flareClass}
+                  {st.magnitude}
+                </strong>{" "}
+                · {st.peakTime.slice(0, 10)}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

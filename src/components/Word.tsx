@@ -1,6 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import glossary from "../content/glossary.json";
 import { speak } from "../speech/speak";
+import { useLang } from "../i18n";
+
+// Bahasa Melayu meanings for the tappable science words.
+const GLOSSARY_MS: Record<keyof typeof glossary, string> = {
+  radiation:
+    "Zarah kecil yang laju dari Matahari dan angkasa. Sedikit tidak mengapa. Terlalu banyak tidak baik untuk badan.",
+  dose: "Berapa banyak radiasi yang sudah dikumpul oleh badan kamu.",
+  sol: "Satu hari di Marikh. Ia lebih panjang sedikit daripada sehari di Bumi.",
+  flare: "Kilatan gergasi pada Matahari.",
+  lifeSupport: "Udara, air, kehangatan dan tanaman yang memastikan kru terus hidup.",
+  shielding: "Dinding tebal dan tempat perlindungan ribut yang menghalang radiasi.",
+  science: "Rover dan makmal yang membuat penemuan.",
+};
 
 type GlossaryKey = keyof typeof glossary;
 
@@ -15,7 +28,8 @@ interface Props {
  */
 export function Word({ term, children }: Props) {
   const [open, setOpen] = useState(false);
-  const meaning = glossary[term];
+  const lang = useLang();
+  const meaning = lang === "ms" ? GLOSSARY_MS[term] : glossary[term];
   const ref = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {

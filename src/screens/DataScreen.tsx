@@ -22,9 +22,14 @@ const DATASETS = [
     link: "https://ccmc.gsfc.nasa.gov/DONKI/",
   },
   {
-    name: "RadLab data (NASA OSDR)",
-    drives: "How fast the radiation badge fills. Values are a placeholder until real readings are copied in.",
-    link: "https://visualization.osdr.nasa.gov/radlab/",
+    name: "Curiosity rover radiation detector (RAD)",
+    drives: "The everyday radiation on Mars that slowly fills the badge: 0.64 mSv per day, measured at Gale Crater.",
+    link: "https://doi.org/10.1126/science.1244797",
+  },
+  {
+    name: "NASA crew radiation standard (NASA-STD-3001)",
+    drives: "When the radiation badge is full: NASA's 250 mSv limit for one solar storm.",
+    link: "https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf",
   },
   {
     name: "OSDR",
@@ -38,12 +43,13 @@ const DATASETS = [
   },
 ];
 
-// The radiation constants that are still unverified, for the on-page flag.
-const UNVERIFIED = [
-  DOSE_RATE_UNSHIELDED,
-  SHIELD_LEAKAGE_AT_FULL,
-  DOSE_RATE_BACKGROUND,
-].filter((c) => c.unverified);
+// The radiation numbers behind the badge, each with where it comes from.
+const RADIATION = [
+  { label: "Badge full at", c: RADIATION_BADGE_LIMIT },
+  { label: "Everyday dose on Mars", c: DOSE_RATE_BACKGROUND },
+  { label: "Storm dose with no shield", c: DOSE_RATE_UNSHIELDED },
+  { label: "Let through a full shelter", c: SHIELD_LEAKAGE_AT_FULL },
+];
 
 export function DataScreen({ lastStorm, onBack }: Props) {
   const archive = getArchive();
@@ -119,16 +125,24 @@ export function DataScreen({ lastStorm, onBack }: Props) {
       )}
 
       <section className="panel panel-raised">
-        <h3>Unverified numbers</h3>
+        <h3>The radiation numbers</h3>
         <p className="quiet">
-          These radiation numbers are placeholders until real RadLab readings
-          are pulled in. Badge limit {RADIATION_BADGE_LIMIT.value} (game units).
+          The radiation badge counts real units (mSv). Real NASA numbers are
+          linked; the rest are game estimates and say so.
         </p>
         <ul className="prose-list">
-          {UNVERIFIED.map((c, i) => (
-            <li key={i}>
-              {c.value}
-              {c.unit ? ` ${c.unit}` : ""} — UNVERIFIED
+          {RADIATION.map(({ label, c }) => (
+            <li key={label}>
+              {label}: {c.unit === undefined ? `${Math.round(c.value * 100)}%` : `${c.value} ${c.unit}`}
+              {" — "}
+              {c.source.startsWith("http") ? (
+                <a href={c.source} target="_blank" rel="noreferrer noopener">
+                  NASA source
+                </a>
+              ) : (
+                "game estimate"
+              )}
+              {c.note ? <span className="quiet"> ({c.note})</span> : null}
             </li>
           ))}
         </ul>

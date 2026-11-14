@@ -1,3 +1,4 @@
+import { useT } from "../i18n";
 interface Props {
   distance: number; // 0..1
   onChange: (d: number) => void;
@@ -12,6 +13,7 @@ interface Props {
  * back before the storm hits.
  */
 export function RoverTrack({ distance, onChange, safeFraction, showNumbers }: Props) {
+  const t = useT();
   const tooFar = distance > safeFraction;
   return (
     <div className="rover-track">
@@ -33,7 +35,7 @@ export function RoverTrack({ distance, onChange, safeFraction, showNumbers }: Pr
         max={100}
         value={Math.round(distance * 100)}
         onChange={(e) => onChange(Number(e.target.value) / 100)}
-        aria-label="How far to send the rover"
+        aria-label={t("rover.aria")}
         className="rover-range"
       />
       <p className={tooFar ? "rover-note warn" : "rover-note"}>
@@ -42,8 +44,8 @@ export function RoverTrack({ distance, onChange, safeFraction, showNumbers }: Pr
               safeFraction * 100,
             )}%`
           : tooFar
-            ? "Too far! The rover can't get home before the storm."
-            : "The rover can get home in time."}
+            ? t("rover.tooFar")
+            : t("rover.ok")}
       </p>
     </div>
   );

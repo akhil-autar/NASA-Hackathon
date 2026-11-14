@@ -41,7 +41,7 @@ export interface OutpostState {
   battery: number; // 0..BATTERY_MAX
   comfort: number; // 0..COMFORT_MAX
   science: number; // 0..SCIENCE_GOAL (can exceed, we cap at goal)
-  radiationBadge: number; // mSv game units, accumulates
+  radiationBadge: number; // mSv, accumulates (full at NASA's 250 mSv limit)
   crewSheltered: boolean;
   /** Greenhouse plant health, 0..100. Tracks life support. */
   greenhouse: number;

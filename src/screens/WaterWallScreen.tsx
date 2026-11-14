@@ -1,3 +1,4 @@
+import { useTx } from "../i18n";
 import { useState } from "react";
 import { Bolt } from "../components/Bolt";
 import { OutpostView } from "../components/OutpostView";
@@ -35,6 +36,7 @@ function waterVisual(a: TankAssignment): OutpostVisual {
 }
 
 export function WaterWallScreen({ onBack }: Props) {
+  const tx = useTx();
   const [a, setA] = useState<TankAssignment>({
     drinking: 2,
     airMaker: 2,
@@ -51,19 +53,19 @@ export function WaterWallScreen({ onBack }: Props) {
         <Stars count={result.stars} />
         <OutpostView visual={waterVisual(a)} className="water-scene" />
         <section className="card">
-          <h3 className="card-title">{result.success ? "The wall held!" : "Something gave way"}</h3>
+          <h3 className="card-title">{result.success ? tx("The wall held!", "Dinding itu bertahan!") : tx("Something gave way", "Ada yang tidak bertahan")}</h3>
           <p className="card-body">
-            {result.thirsty && "The crew went thirsty. "}
-            {result.airLow && "The air got thin. "}
-            {result.shieldWeak && "The shield wall was too weak. "}
-            {result.success && "Drinking water, air, and the shield wall all held."}
+            {result.thirsty && tx("The crew went thirsty. ", "Kru kehausan. ")}
+            {result.airLow && tx("The air got thin. ", "Udara menjadi nipis. ")}
+            {result.shieldWeak && tx("The shield wall was too weak. ", "Dinding perisai terlalu lemah. ")}
+            {result.success && tx("Drinking water, air, and the shield wall all held.", "Air minuman, udara dan dinding perisai semuanya bertahan.")}
           </p>
         </section>
         <button type="button" className="big-button" onClick={() => setDone(false)}>
-          Try again
+          {tx("Try again", "Cuba lagi")}
         </button>
         <button type="button" className="big-button ghost" onClick={onBack}>
-          Back
+          {tx("Back", "Kembali")}
         </button>
       </div>
     );
@@ -73,7 +75,10 @@ export function WaterWallScreen({ onBack }: Props) {
     <div className="screen">
       <Bolt
         autoSpeak
-        text="A wall of water is coming. Put the six tanks where they help most. Each tank does one job."
+        text={tx(
+          "A wall of water is coming. Put the six tanks where they help most. Each tank does one job.",
+          "Dinding air akan datang. Letakkan enam tangki di tempat yang paling membantu. Setiap tangki ada satu tugas.",
+        )}
       />
       <OutpostView visual={waterVisual(a)} className="water-scene" />
       <WaterTanks total={TOTAL} assignment={a} onChange={setA} />
@@ -83,10 +88,10 @@ export function WaterWallScreen({ onBack }: Props) {
         disabled={placed !== TOTAL}
         onClick={() => setDone(true)}
       >
-        {placed === TOTAL ? "Lock it in" : `Place ${TOTAL - placed} more`}
+        {placed === TOTAL ? tx("Lock it in", "Kunci pilihan") : tx(`Place ${TOTAL - placed} more`, `Letak ${TOTAL - placed} lagi`)}
       </button>
       <button type="button" className="big-button ghost" onClick={onBack}>
-        Back
+        {tx("Back", "Kembali")}
       </button>
     </div>
   );

@@ -1,3 +1,4 @@
+import { useTx } from "../i18n";
 import { useState } from "react";
 import { Bolt } from "../components/Bolt";
 import featured from "../content/featured-storms.json";
@@ -13,6 +14,7 @@ const now = new Date();
 const TODAY = now.toISOString().slice(0, 10);
 
 export function TimeMachineScreen({ onPlay, onBack }: Props) {
+  const tx = useTx();
   const [date, setDate] = useState("2017-09-06");
   const [message, setMessage] = useState<string | null>(null);
 
@@ -28,7 +30,7 @@ export function TimeMachineScreen({ onPlay, onBack }: Props) {
     }
     const near = nearestStorm(date);
     if (!near) {
-      setMessage("No storm found. Try another date.");
+      setMessage(tx("No storm found. Try another date.", "Tiada ribut dijumpai. Cuba tarikh lain."));
       return;
     }
     if (near.daysAway === 0) {
@@ -36,9 +38,10 @@ export function TimeMachineScreen({ onPlay, onBack }: Props) {
       return;
     }
     setMessage(
-      `The Sun was calm that day. ${near.daysAway} day${
-        near.daysAway === 1 ? "" : "s"
-      } away, it did this.`,
+      tx(
+        `The Sun was calm that day. ${near.daysAway} day${near.daysAway === 1 ? "" : "s"} away, it did this.`,
+        `Matahari tenang pada hari itu. ${near.daysAway} hari dari tarikh itu, inilah yang berlaku.`,
+      ),
     );
     // Give the child a beat to read, then play the nearest storm.
     window.setTimeout(() => onPlay(near.storm), 1600);
@@ -46,7 +49,7 @@ export function TimeMachineScreen({ onPlay, onBack }: Props) {
 
   return (
     <div className="screen">
-      <Bolt autoSpeak text="Pick any day. See what the Sun was doing." />
+      <Bolt autoSpeak text={tx("Pick any day. See what the Sun was doing.", "Pilih mana-mana hari. Lihat apa yang Matahari sedang buat.")} />
 
       {featuredStorms.length > 0 && (
         <div className="featured-row">
@@ -57,21 +60,19 @@ export function TimeMachineScreen({ onPlay, onBack }: Props) {
               className="featured-slot"
               onClick={() => onPlay(s)}
             >
-              {s.flareClass}
-              {s.magnitude} · {s.peakTime.slice(0, 10)}
+              <strong>
+                {s.flareClass}
+                {s.magnitude}
+              </strong>{" "}
+              · {s.peakTime.slice(0, 10)}
             </button>
           ))}
         </div>
       )}
-      {featuredStorms.length === 0 && (
-        <p className="placeholder-note">
-          Featured storms appear here once the team fills in
-          featured-storms.json.
-        </p>
-      )}
+
 
       <label className="date-pick">
-        <span>Choose a date</span>
+        <span>{tx("Choose a date", "Pilih tarikh")}</span>
         <input
           type="date"
           value={date}
@@ -84,10 +85,10 @@ export function TimeMachineScreen({ onPlay, onBack }: Props) {
       {message && <p className="warn-text">{message}</p>}
 
       <button type="button" className="big-button go" onClick={pick}>
-        Go to this day
+        {tx("Go to this day", "Pergi ke hari ini")}
       </button>
       <button type="button" className="big-button ghost" onClick={onBack}>
-        Back
+        {tx("Back", "Kembali")}
       </button>
     </div>
   );

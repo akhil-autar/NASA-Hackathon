@@ -1,3 +1,4 @@
+import { useTx } from "../i18n";
 import { useCallback } from "react";
 import { APP_NAME } from "../config";
 import { Icon } from "./Icon";
@@ -14,6 +15,7 @@ interface Props {
  * download as a fallback.
  */
 export function ShareCard({ stars, stormDate, stormLabel }: Props) {
+  const tx = useTx();
   const makeBlob = useCallback(async (): Promise<Blob | null> => {
     const w = 1200;
     const h = 630;
@@ -82,7 +84,7 @@ export function ShareCard({ stars, stormDate, stormLabel }: Props) {
   return (
     <button type="button" className="btn btn-secondary btn-block" onClick={share}>
       <Icon name="share" />
-      Share my stars
+      {tx("Share my stars", "Kongsi bintang saya")}
     </button>
   );
 }

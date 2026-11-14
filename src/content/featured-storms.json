@@ -1,8 +1,23 @@
 {
-  "note": "PLACEHOLDER SLOTS. The team fills these in after fact-checking. Put a real DONKI flare id in `stormId` and a hand-written story in `story`. Leave as-is until then.",
+  "note": "Featured real storms from the DONKI archive. Facts checked against src/data/storms.json (flare class, Kp) and NOAA/NASA reporting on the May 2024 storms.",
   "slots": [
-    { "stormId": "", "title": "PLACEHOLDER: featured storm 1", "story": "" },
-    { "stormId": "", "title": "PLACEHOLDER: featured storm 2", "story": "" },
-    { "stormId": "", "title": "PLACEHOLDER: featured storm 3", "story": "" }
+    {
+      "stormId": "2017-09-06T11:53:00-FLR-001",
+      "title": "The biggest flare since 2010",
+      "story": "Class X9.3: the biggest solar flare in NASA's records since 2010. It shook Earth's magnetic field up to Kp 8 out of 9.",
+      "story_ms": "Kelas X9.3: nyalaan suria terbesar dalam rekod NASA sejak 2010. Ia menggegarkan medan magnet Bumi sehingga Kp 8 daripada 9."
+    },
+    {
+      "stormId": "2024-05-10T06:27:00-FLR-001",
+      "title": "The May 2024 aurora storm",
+      "story": "One of the flares behind the May 2024 storms, the strongest to hit Earth in about 20 years. People saw auroras much closer to the equator than usual.",
+      "story_ms": "Salah satu nyalaan di sebalik ribut Mei 2024, ribut paling kuat melanda Bumi dalam kira-kira 20 tahun. Orang ramai nampak aurora jauh lebih dekat dengan khatulistiwa daripada biasa."
+    },
+    {
+      "stormId": "2024-10-03T12:08:00-FLR-001",
+      "title": "The October 2024 giant",
+      "story": "Class X9.0: the second biggest flare in NASA's records since 2010. It reached Kp 7 at Earth.",
+      "story_ms": "Kelas X9.0: nyalaan kedua terbesar dalam rekod NASA sejak 2010. Ia mencapai Kp 7 di Bumi."
+    }
   ]
 }

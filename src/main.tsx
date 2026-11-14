@@ -5,6 +5,7 @@ import "./styles/tokens.css";
 import "./styles.css";
 import "./styles/base.css";
 import "./styles/scene.css";
+import "./styles/game.css";
 
 const root = document.getElementById("root");
 if (root) {

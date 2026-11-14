@@ -1,3 +1,4 @@
+import { useTx } from "../i18n";
 export type Job = "drinking" | "airMaker" | "shieldWall";
 
 export interface TankAssignment {
@@ -23,7 +24,14 @@ const JOBS: { id: Job; label: string }[] = [
  * use plus/minus steppers (large touch targets) rather than literal dragging,
  * so it works the same on a phone and keeps each tank assigned to one job.
  */
+const JOB_MS: Record<string, string> = {
+  drinking: "Air minuman",
+  airMaker: "Pembuat udara",
+  shieldWall: "Dinding perisai",
+};
+
 export function WaterTanks({ total, assignment, onChange }: Props) {
+  const tx = useTx();
   const used = assignment.drinking + assignment.airMaker + assignment.shieldWall;
   const left = total - used;
 
@@ -38,11 +46,11 @@ export function WaterTanks({ total, assignment, onChange }: Props) {
 
   return (
     <div className="water-tanks">
-      <p className="water-left">Tanks left to place: {left}</p>
+      <p className="water-left">{tx("Tanks left to place", "Tangki yang belum diletak")}: {left}</p>
       {JOBS.map((j) => (
         <div className="tank-job" key={j.id}>
           <span className="tank-job-label">
-            {j.label}
+            {tx(j.label, JOB_MS[j.id])}
           </span>
           <div className="tank-stepper">
             <button

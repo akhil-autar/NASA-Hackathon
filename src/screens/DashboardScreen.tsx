@@ -6,11 +6,18 @@ import { Stars } from "../components/Stars";
 import { StormTimeline } from "../components/StormTimeline";
 import { nearestStorm, ARCHIVE_START_YEAR } from "../data/archive";
 import type { ArchivedStorm } from "../data/archive-types";
-import { strengthWords, useToday } from "../data/useToday";
+import { useToday } from "../data/useToday";
 import type { Profile } from "../storage/profile";
 import { BADGES, loadProgress } from "../storage/progress";
 import { useCan3D } from "../three/capability";
 import { activityFor } from "../three/types";
+import { useLang, useT, type Key } from "../i18n";
+import { AvatarFigure } from "../avatar/AvatarFigure";
+
+function stormKey(flareClass: "M" | "X", magnitude: number): Key {
+  if (flareClass === "M") return "storm.medium";
+  return magnitude >= 5 ? "storm.giant" : "storm.strong";
+}
 
 export type DashRoute =
   | "today"
@@ -41,6 +48,9 @@ export function DashboardScreen({
   // The storm under the Time Machine handle. While set, the Sun shows it.
   const [scrubbed, setScrubbed] = useState<ArchivedStorm | null>(null);
   const can3D = useCan3D();
+  const t = useT();
+  const lang = useLang();
+  const strengthWords = (c: "M" | "X", m: number) => t(stormKey(c, m));
 
   const storm = data?.storm ?? null;
   const strength = storm
@@ -49,14 +59,14 @@ export function DashboardScreen({
 
   const todayLine =
     status === "loading"
-      ? "Asking NASA what the Sun is doing."
+      ? t("dash.asking")
       : storm && data?.live && data.daysAgo === 0
-        ? `The Sun made ${strength} today.`
+        ? t("dash.today", { s: strength ?? "" })
         : storm && data?.quiet
-          ? `The Sun is quiet today. The last real storm was ${strength}.`
+          ? t("dash.quiet", { s: strength ?? "" })
           : storm
-            ? `The newest real storm was ${strength}.`
-            : "No storm to show right now.";
+            ? t("dash.newest", { s: strength ?? "" })
+            : t("dash.none");
 
   // The Sun shows the storm under the timeline handle, or else today's storm.
   const shown = scrubbed ?? storm;
@@ -64,12 +74,12 @@ export function DashboardScreen({
   const sunCaption = scrubbed
     ? `${scrubbed.peakTime.slice(0, 10)}: ${shownWords}`
     : status === "loading"
-      ? "Looking at the Sun"
+      ? t("dash.looking")
       : storm && data?.live && data.daysAgo === 0
-        ? `Today: ${shownWords}`
+        ? t("dash.todayCap", { s: shownWords ?? "" })
         : storm
           ? `${storm.peakTime.slice(0, 10)}: ${shownWords}`
-          : "The Sun is quiet";
+          : t("dash.sunQuiet");
   const sunDescription = shown
     ? `The Sun. ${sunCaption}. Flare class ${shown.flareClass}${shown.magnitude}.`
     : "The Sun, quiet.";
@@ -86,29 +96,34 @@ export function DashboardScreen({
             <span className="sun-caption-main">{sunCaption}</span>
             {shown && (
               <span className="quiet">
-                Real flare, class {shown.flareClass}
-                {shown.magnitude}
+                {t("dash.realFlare", { c: `${shown.flareClass}${shown.magnitude}` })}
               </span>
             )}
           </div>
-          {can3D && <span className="sun-hint quiet">Drag to turn the Sun</span>}
+          {can3D && <span className="sun-hint quiet">{t("dash.drag")}</span>}
         </SunView>
 
         <div className="dash-side">
-          <Bolt text="Welcome back, Commander." expression="happy" />
+          <div className="dash-hello">
+            <AvatarFigure look={profile.avatar} size={64} pose="wave" />
+            <Bolt
+              text={t("dash.welcome", { name: profile.avatar.name || t("avatar.defaultName") })}
+              expression="happy"
+            />
+          </div>
 
           <section className="panel dash-today">
-            <h2>Today's Sun</h2>
+            <h2>{t("dash.todaysSun")}</h2>
             <p>{todayLine}</p>
             {status === "error" && storm ? (
               <p className="quiet offline-note" role="status">
-                NASA's data could not be reached. Showing an archived storm.
+                {t("dash.offline")}
               </p>
             ) : (
               !data?.live &&
               storm &&
               status !== "loading" && (
-                <p className="quiet">Showing an archived storm.</p>
+                <p className="quiet">{t("dash.archived")}</p>
               )
             )}
             <Button
@@ -118,7 +133,7 @@ export function DashboardScreen({
               disabled={!storm}
               onClick={() => storm && onPlayStorm(storm, !!data?.live)}
             >
-              Start today's mission
+              {t("dash.start")}
             </Button>
           </section>
 
@@ -129,7 +144,7 @@ export function DashboardScreen({
                 className="panel dash-mini"
                 onClick={() => onPlayBirthday(near.storm)}
               >
-                <span className="dash-mini-title">Your birthday Sun</span>
+                <span className="dash-mini-title">{t("dash.birthday")}</span>
                 <span className="quiet">
                   {near.storm.flareClass}
                   {near.storm.magnitude} · {near.storm.peakTime.slice(0, 10)}
@@ -141,31 +156,31 @@ export function DashboardScreen({
               className="panel dash-mini"
               onClick={() => onGo("missions")}
             >
-              <span className="dash-mini-title">More missions</span>
-              <span className="quiet">Dust, water, Earth</span>
+              <span className="dash-mini-title">{t("dash.more")}</span>
+              <span className="quiet">{t("dash.moreSub")}</span>
             </button>
           </div>
         </div>
       </div>
 
       <section className="panel dash-timeline">
-        <h2>Storm Time Machine</h2>
+        <h2>{t("dash.timeMachine")}</h2>
         <StormTimeline onPick={(s) => onPlayStorm(s, false)} onScrub={setScrubbed} />
       </section>
 
       <section className="panel dash-stats">
         <div className="dash-stats-main">
           <span className="dash-stars">
-            Stars <strong>{progress.totalStars}</strong>
+            {t("dash.stars")} <strong>{progress.totalStars}</strong>
           </span>
           <Stars count={Math.min(3, progress.totalStars)} />
           {progress.badges.length > 0 && (
             <div className="badge-block">
-              <span className="badge-label">Badges</span>
+              <span className="badge-label">{t("dash.badges")}</span>
               <div className="badge-row">
                 {progress.badges.map((b) => (
                   <span key={b} className="badge">
-                    {BADGES[b]?.name ?? b}
+                    {(lang === "ms" ? BADGES[b]?.name_ms : BADGES[b]?.name) ?? b}
                   </span>
                 ))}
               </div>
@@ -180,7 +195,7 @@ export function DashboardScreen({
               onClick={() => setLogOpen((o) => !o)}
               aria-expanded={logOpen}
             >
-              Commander's log
+              {t("dash.log")}
             </button>
             {logOpen && (
               <ul className="log-list">
@@ -195,8 +210,7 @@ export function DashboardScreen({
 
       {near?.shiftedYear && (
         <p className="quiet dash-note">
-          NASA's storm diary starts in {ARCHIVE_START_YEAR}, so your birthday
-          storm uses that year.
+          {t("dash.shifted", { y: ARCHIVE_START_YEAR })}
         </p>
       )}
     </div>

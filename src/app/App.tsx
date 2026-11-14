@@ -17,7 +17,8 @@ import { getArchive } from "../data/archive";
 import { TodayScreen } from "../screens/TodayScreen";
 import { WelcomeScreen } from "../screens/WelcomeScreen";
 import { TopBar, type TopBarLink } from "../components/TopBar";
-import { setSoundOn } from "../speech/speak";
+import { setSoundOn, setSpeechLang } from "../speech/speak";
+import { LANGS, LangContext, SPEECH_LANG, makeT } from "../i18n";
 import { loadProfile, saveProfile, type Profile } from "../storage/profile";
 import { loadSettings, saveSettings, type Settings } from "../storage/settings";
 
@@ -58,6 +59,7 @@ export function App() {
   const [settings, setSettings] = useState<Settings>(() => {
     const s = loadSettings();
     setSoundOn(s.soundOn);
+    setSpeechLang(SPEECH_LANG[s.lang]);
     return s;
   });
   const [view, setView] = useState<View>(() =>
@@ -70,6 +72,15 @@ export function App() {
     setSettings(next);
     saveSettings(next);
     if (patch.soundOn !== undefined) setSoundOn(next.soundOn);
+    if (patch.lang !== undefined) {
+      setSpeechLang(SPEECH_LANG[next.lang]);
+      document.documentElement.lang = next.lang;
+    }
+  };
+  const t = makeT(settings.lang);
+  const updateProfile = (p: Profile) => {
+    setProfile(p);
+    saveProfile(p);
   };
 
   const goDash = () => setView({ name: "dashboard" });
@@ -117,10 +128,10 @@ export function App() {
   };
 
   const topBarLinks: TopBarLink[] = [
-    { label: "Grown-ups", onClick: () => setView({ name: "parent" }) },
-    { label: "Class mode", onClick: () => setView({ name: "class" }) },
-    { label: "NASA data", onClick: () => setView({ name: "data" }) },
-    { label: "Settings", onClick: () => setView({ name: "settings" }) },
+    { label: t("nav.grownups"), onClick: () => setView({ name: "parent" }) },
+    { label: t("nav.class"), onClick: () => setView({ name: "class" }) },
+    { label: t("nav.data"), onClick: () => setView({ name: "data" }) },
+    { label: t("nav.settings"), onClick: () => setView({ name: "settings" }) },
   ];
 
   let body: React.ReactNode;
@@ -163,6 +174,8 @@ export function App() {
         <SettingsScreen
           settings={settings}
           onChange={updateSettings}
+          profile={profile}
+          onProfile={updateProfile}
           onBack={goDash}
         />
       );
@@ -200,6 +213,7 @@ export function App() {
           isDaily={view.isDaily}
           dustStorm={view.dustStorm}
           crewNames={profile.crew}
+          look={profile.avatar}
           showNumbers={settings.showNumbers}
           onExit={goDash}
         />
@@ -217,21 +231,39 @@ export function App() {
   }
 
   return (
-    <div className="app">
-      {view.name !== "welcome" && (
-        <TopBar
-          links={topBarLinks}
-          soundOn={settings.soundOn}
-          onToggleSound={() => updateSettings({ soundOn: !settings.soundOn })}
-        />
-      )}
-      <main className="app-main">{body}</main>
-      <footer className="app-footer">
-        <p>
-          Data from NASA. Storms are real DONKI events; the Mars base is
-          make-believe.
-        </p>
-      </footer>
-    </div>
+    <LangContext.Provider value={settings.lang}>
+      <div className="app">
+        {view.name !== "welcome" && (
+          <TopBar
+            links={topBarLinks}
+            soundOn={settings.soundOn}
+            onToggleSound={() => updateSettings({ soundOn: !settings.soundOn })}
+            onHome={goDash}
+            lang={settings.lang}
+            onLang={(lang) => updateSettings({ lang })}
+          />
+        )}
+        {view.name === "welcome" && (
+          <div className="welcome-lang" role="radiogroup" aria-label={t("nav.language")}>
+            {LANGS.map((l) => (
+              <button
+                key={l.id}
+                type="button"
+                role="radio"
+                aria-checked={settings.lang === l.id}
+                className={settings.lang === l.id ? "lang-option on" : "lang-option"}
+                onClick={() => updateSettings({ lang: l.id })}
+              >
+                {l.name}
+              </button>
+            ))}
+          </div>
+        )}
+        <main className="app-main">{body}</main>
+        <footer className="app-footer">
+          <p>{t("footer")}</p>
+        </footer>
+      </div>
+    </LangContext.Provider>
   );
 }

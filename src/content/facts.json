@@ -1,7 +1,17 @@
 {
-  "note": "PLACEHOLDER. 'Real astronauts' facts, written by the team from OSDR research. Each needs a short kid-friendly line and a study link. Leave as-is until fact-checked.",
+  "note": "Real astronaut facts. The game shows these through src/i18n/strings.ts (fact.*) so they can be translated; this file keeps the sources together for the team.",
   "facts": [
-    { "text": "PLACEHOLDER: a real astronaut radiation fact.", "link": "" },
-    { "text": "PLACEHOLDER: a real greenhouse/plants-in-space fact.", "link": "" }
+    {
+      "text": "NASA does not let an astronaut collect more than 600 mSv of space radiation in their whole career. One big solar storm must stay under 250 mSv.",
+      "link": "https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf"
+    },
+    {
+      "text": "NASA's Curiosity rover measured the radiation on Mars: about 0.64 mSv every day.",
+      "link": "https://doi.org/10.1126/science.1244797"
+    },
+    {
+      "text": "In 2015, astronauts on the space station ate red lettuce they grew in space. It grew for 33 days in a plant box called Veggie.",
+      "link": "https://phys.org/news/2015-08-meals-ready-crew-members-sample.html"
+    }
   ]
 }

@@ -35,12 +35,12 @@ export function saveProgress(p: Progress): void {
 }
 
 /** All badges the game can award. Badges reward trying, not only winning. */
-export const BADGES: Record<string, { name: string }> = {
-  firstMission: { name: "First mission" },
-  newStrategy: { name: "New plan" },
-  threeStars: { name: "Perfect sol" },
-  shelterMaster: { name: "Safe and sound" },
-  scientist: { name: "Rock star" },
-  roverExplorer: { name: "Rover explorer" },
-  dareTaker: { name: "Dare taker" },
+export const BADGES: Record<string, { name: string; name_ms: string }> = {
+  firstMission: { name: "First mission", name_ms: "Misi pertama" },
+  newStrategy: { name: "New plan", name_ms: "Pelan baharu" },
+  threeStars: { name: "Perfect sol", name_ms: "Sol sempurna" },
+  shelterMaster: { name: "Safe and sound", name_ms: "Selamat sejahtera" },
+  scientist: { name: "Rock star", name_ms: "Bintang batu" },
+  roverExplorer: { name: "Rover explorer", name_ms: "Peneroka rover" },
+  dareTaker: { name: "Dare taker", name_ms: "Berani mencuba" },
 };

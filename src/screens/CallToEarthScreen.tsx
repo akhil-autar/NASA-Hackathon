@@ -1,3 +1,4 @@
+import { useTx } from "../i18n";
 import { useEffect, useRef, useState } from "react";
 import { Bolt } from "../components/Bolt";
 import { MessageView } from "../components/MessageView";
@@ -13,6 +14,7 @@ interface Props {
 const ANSWER_SECONDS = 6;
 
 export function CallToEarthScreen({ onBack }: Props) {
+  const tx = useTx();
   const [holding, setHolding] = useState(false);
   const [waited, setWaited] = useState(0);
   const [result, setResult] = useState<CallResult | null>(null);
@@ -52,17 +54,17 @@ export function CallToEarthScreen({ onBack }: Props) {
         <Stars count={result.stars} />
         <section className="card">
           <h3 className="card-title">
-            {result.success ? "Leak fixed!" : "The fix didn't hold"}
+            {result.success ? tx("Leak fixed!", "Kebocoran sudah dibaiki!") : tx("The fix didn't hold", "Pembaikan tidak bertahan")}
           </h3>
           <p className="card-body">
-            Air left: {Math.round(result.airLeft)}%.{" "}
+            {tx("Air left", "Udara tinggal")}: {Math.round(result.airLeft)}%.{" "}
             {result.guessedRight
-              ? "You chose well."
-              : "The guess was wrong, but everyone is safe."}
+              ? tx("You chose well.", "Pilihan kamu bagus.")
+              : tx("The guess was wrong, but everyone is safe.", "Tekaan itu salah, tetapi semua orang selamat.")}
           </p>
         </section>
         <button type="button" className="big-button" onClick={onBack}>
-          Back
+          {tx("Back", "Kembali")}
         </button>
       </div>
     );
@@ -74,11 +76,14 @@ export function CallToEarthScreen({ onBack }: Props) {
     <div className="screen">
       <Bolt
         autoSpeak
-        text="The air is leaking! Hold the button to wait for Earth's answer, or let go to fix it now on a guess."
+        text={tx(
+          "The air is leaking! Hold the button to wait for Earth's answer, or let go to fix it now on a guess.",
+          "Udara sedang bocor! Tekan dan tahan butang untuk menunggu jawapan dari Bumi, atau lepaskan untuk membaikinya sekarang dengan meneka.",
+        )}
       />
       <MessageView progress={waited / ANSWER_SECONDS} className="call-scene" />
       <div className="gauge">
-        <span className="gauge-label">Air — {Math.round(airLeft)}%</span>
+        <span className="gauge-label">{tx("Air", "Udara")} — {Math.round(airLeft)}%</span>
         <span className="gauge-bar">
           <span
             className="gauge-fill warn"
@@ -93,13 +98,13 @@ export function CallToEarthScreen({ onBack }: Props) {
         onPointerUp={letGo}
         onPointerLeave={() => holding && letGo()}
       >
-        {holding ? "Waiting for Earth..." : "Hold to wait for Earth"}
+        {holding ? tx("Waiting for Earth...", "Menunggu Bumi...") : tx("Hold to wait for Earth", "Tahan untuk menunggu Bumi")}
       </button>
       <p className="source-note">
-        Let go any time to fix it yourself — but that's a guess.
+        {tx("Let go any time to fix it yourself — but that's a guess.", "Lepaskan bila-bila masa untuk membaikinya sendiri — tetapi itu satu tekaan.")}
       </p>
       <button type="button" className="big-button ghost" onClick={onBack}>
-        Back
+        {tx("Back", "Kembali")}
       </button>
     </div>
   );

@@ -1,3 +1,4 @@
+import { useTx } from "../i18n";
 import { lazy } from "react";
 import { SceneFrame } from "../three/SceneFrame";
 
@@ -13,6 +14,7 @@ interface Props {
 
 /** A message travelling from Earth to Mars. */
 export function MessageView({ progress, loopSeconds, className }: Props) {
+  const tx = useTx();
   const pct = Math.round((progress ?? 0) * 100);
   return (
     <SceneFrame
@@ -28,8 +30,8 @@ export function MessageView({ progress, loopSeconds, className }: Props) {
         <MessageCanvas progress={progress} loopSeconds={loopSeconds} active={active} />
       )}
     >
-      <span className="message-end message-end-earth">Earth</span>
-      <span className="message-end message-end-mars">Mars</span>
+      <span className="message-end message-end-earth">{tx("Earth", "Bumi")}</span>
+      <span className="message-end message-end-mars">{tx("Mars", "Marikh")}</span>
     </SceneFrame>
   );
 }

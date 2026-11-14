@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import bolt from "../content/bolt.json";
 import crew from "../content/crew.json";
 import dareContent from "../content/dare-cards.json";
 import {
@@ -12,7 +11,18 @@ import {
   MISSION_HOURS,
   RADIATION_BADGE_LIMIT,
 } from "../data/constants";
+import { AvatarFigure } from "../avatar/AvatarFigure";
+import { SUITS, VISORS, type AvatarLook } from "../avatar/look";
 import { Bolt } from "../components/Bolt";
+import { GameOver } from "../components/GameOver";
+import { HowToPlay, howToSeen, markHowToSeen } from "../components/HowToPlay";
+import { PowerCubes } from "../components/PowerCubes";
+import { QuizPop } from "../components/QuizPop";
+import { quizFor } from "../content/quiz";
+import { useLang, useT, useTx, type Key } from "../i18n";
+import { explain } from "../sim/explain";
+import { roverCaughtOutside } from "../sim/mission";
+import { isSpeaking } from "../speech/speak";
 import { Button } from "../components/Button";
 import { CrewPortrait, type CrewMood, type CrewRole } from "../components/CrewPortrait";
 import { MessageView } from "../components/MessageView";
@@ -36,7 +46,7 @@ import { award } from "../storage/award";
 import { BADGES, loadProgress, saveProgress } from "../storage/progress";
 import type { CrewNames } from "../storage/profile";
 import { useCan3D } from "../three/capability";
-import type { OutpostShot, OutpostVisual } from "../three/types";
+import type { OutpostShot, OutpostVisual, PlayerVisual } from "../three/types";
 
 type Phase = "brief" | "rover" | "guess" | "plan" | "running" | "result";
 
@@ -65,7 +75,15 @@ interface Props {
   dustStorm?: boolean;
   crewNames?: CrewNames | null;
   showNumbers?: boolean;
+  /** The player's own astronaut. */
+  look: AvatarLook;
   onExit?: () => void;
+}
+
+/** Storm size in words (translation key), from the real flare class. */
+function stormWordKey(storm: Storm): Key {
+  if (storm.flareClass === "M") return "storm.medium";
+  return storm.magnitude >= 5 ? "storm.giant" : "storm.strong";
 }
 
 export function MissionScreen({
@@ -76,9 +94,26 @@ export function MissionScreen({
   dustStorm,
   crewNames,
   showNumbers,
+  look,
   onExit,
 }: Props) {
+  const t = useT();
+  const tx = useTx();
+  const lang = useLang();
+  // Kid-friendly controls: 10 power cubes (the triangle stays as an option).
+  const [cubesLeft, setCubesLeft] = useState(10);
+  const [stormCubesLeft, setStormCubesLeft] = useState(0);
+  const [useTriangle, setUseTriangle] = useState(false);
+  // The picture guide shows before the very first mission, and from the ? button.
+  const [showHowTo, setShowHowTo] = useState(() => !howToSeen());
+  // Bolt's quick question: once per mission, in a calm moment.
+  const [quizState, setQuizState] = useState<"pending" | "open" | "done">("pending");
+  const [brainStar, setBrainStar] = useState(false);
+  const question = useMemo(() => quizFor(seed), [seed]);
   const [phase, setPhase] = useState<Phase>("brief");
+  // Game over: first the astronaut falls in the scene, then the card, and the
+  // child can open the full result details from there.
+  const [goStage, setGoStage] = useState<"fall" | "card" | "details">("fall");
   const [plan, setPlan] = useState<Plan>(START_PLAN);
   const [guess, setGuess] = useState<"yes" | "no" | null>(null);
   const [hour, setHour] = useState(0);
@@ -144,7 +179,12 @@ export function MissionScreen({
 
   // Advance one game hour per tick while running. The clock pauses while the
   // warning travels from Earth and while the child changes the plan.
-  const paused = warning || (stormPrompt && !changed);
+  const quizHour = useMemo(() => {
+    if (storm.arrivalHour > 6) return 3;
+    const after = storm.arrivalHour + storm.durationHours + 2;
+    return after < MISSION_HOURS.value - 2 ? after : -1;
+  }, [storm.arrivalHour, storm.durationHours]);
+  const paused = warning || (stormPrompt && !changed) || quizState === "open" || showHowTo;
   useEffect(() => {
     if (phase !== "running" || paused) return;
     const id = window.setInterval(() => {
@@ -156,6 +196,9 @@ export function MissionScreen({
         if (next === storm.arrivalHour && !changed) {
           setStormPrompt(true);
         }
+        if (next === quizHour) {
+          setQuizState((q) => (q === "pending" ? "open" : q));
+        }
         if (next >= trace.length) {
           setPhase("result");
           return trace.length - 1;
@@ -164,16 +207,52 @@ export function MissionScreen({
       });
     }, TICK_MS);
     return () => window.clearInterval(id);
-  }, [phase, paused, trace.length, storm.arrivalHour, changed, warned]);
+  }, [phase, paused, trace.length, storm.arrivalHour, changed, warned, quizHour]);
 
+  // The warning stays up for at least WARNING_MS, and until Bolt has finished
+  // saying it (so the next line never cuts Bolt off), up to 9 seconds.
   useEffect(() => {
     if (!warning) return;
-    const id = window.setTimeout(() => {
-      setWarned(true);
-      setWarning(false);
-    }, WARNING_MS);
-    return () => window.clearTimeout(id);
+    const started = Date.now();
+    const id = window.setInterval(() => {
+      const elapsed = Date.now() - started;
+      if (elapsed >= WARNING_MS && (!isSpeaking() || elapsed > 9000)) {
+        window.clearInterval(id);
+        setWarned(true);
+        setWarning(false);
+      }
+    }, 200);
+    return () => window.clearInterval(id);
   }, [warning]);
+
+  // What really happened, in words (only once the mission is over).
+  const explanation = useMemo(() => {
+    if (phase !== "result" || !outcome) return null;
+    return explain({
+      outcome,
+      plan,
+      planAtStorm,
+      storm,
+      roverCaught: !!isDaily && roverCaughtOutside(storm, rover),
+      stormWordKey: stormWordKey(storm),
+    });
+  }, [phase, outcome, plan, planAtStorm, storm, isDaily, rover]);
+
+  // Game over: let the fall play in the scene before the card appears.
+  useEffect(() => {
+    if (explanation?.kind !== "gameOver" || goStage !== "fall") return;
+    const id = window.setTimeout(() => setGoStage("card"), 3000);
+    return () => window.clearTimeout(id);
+  }, [explanation, goStage]);
+
+  const player = (state: PlayerVisual["state"]): PlayerVisual => ({
+    suit: SUITS[look.suit].color,
+    trim: SUITS[look.suit].trim,
+    visor: VISORS[look.visor],
+    extra: look.extra,
+    state,
+  });
+  const playerName = look.name || t("avatar.defaultName");
 
   const reset = () => {
     setPhase("brief");
@@ -188,6 +267,11 @@ export function MissionScreen({
     setWarning(false);
     setWarned(false);
     setFocus(null);
+    setGoStage("fall");
+    setCubesLeft(10);
+    setStormCubesLeft(0);
+    setQuizState("pending");
+    setBrainStar(false);
   };
 
   const toggleDare = (id: DareId) => {
@@ -199,15 +283,56 @@ export function MissionScreen({
     });
   };
 
+  // --- Phase: game over (the storm got you, or the base froze) ---
+  if (phase === "result" && outcome && explanation?.kind === "gameOver" && goStage !== "details") {
+    const radiationCause = explanation.cause === "radiation" || explanation.cause === "caught";
+    return (
+      <div className={radiationCause ? "game-over-screen" : "game-over-screen cold"}>
+        <OutpostView
+          className="game-over-scene"
+          visual={{
+            lifeSupport: (planAtStorm ?? plan).lifeSupport,
+            shielding: (planAtStorm ?? plan).shielding,
+            science: (planAtStorm ?? plan).science,
+            battery: outcome.finalState.battery,
+            greenhouse: outcome.finalState.greenhouse,
+            storm: radiationCause ? 3 : 0,
+            dust: !!dustStorm,
+            hour: radiationCause ? 10 : 17,
+            crewSheltered: true,
+            shot: "fall",
+            player: player("down"),
+          }}
+        >
+          <span className="stage-chip danger">{radiationCause ? t("chip.storm") : "❄"}</span>
+        </OutpostView>
+        {goStage === "card" && (
+          <GameOver
+            explanation={explanation}
+            look={look}
+            onTryAgain={reset}
+            onDetails={() => setGoStage("details")}
+          />
+        )}
+      </div>
+    );
+  }
+
   // --- Phase: result ---
-  if (phase === "result" && outcome) {
+  if (phase === "result" && outcome && explanation) {
     const batteryLasted = outcome.finalState.battery > 0;
     const guessWasRight = (guess === "yes") === batteryLasted;
+    const headline =
+      explanation.kind === "win"
+        ? t("r.complete")
+        : explanation.kind === "noScience"
+          ? t("r.partial")
+          : t("go.title");
     return (
       <div className="result-screen">
         <div className="result-head">
           <Stars count={outcome.stars} />
-          <h2>{outcome.success ? "Mission complete" : "The crew flew home early"}</h2>
+          <h2>{headline}</h2>
         </div>
 
         <OutpostView
@@ -224,50 +349,61 @@ export function MissionScreen({
 
             crewSheltered: true,
             shot: "result",
+            player: player(explanation.kind === "gameOver" ? "down" : "idle"),
           }}
         />
 
-        <ResultCards outcome={outcome} onPlayAgain={reset} />
+        <ResultCards explanation={explanation} />
+
+        {quizState === "done" && (
+          <p className={brainStar ? "panel brain-star on" : "panel brain-star"}>
+            {brainStar
+              ? tx("🧠 Brain star! You answered Bolt's question right.", "🧠 Bintang otak! Kamu jawab soalan Bolt dengan betul.")
+              : tx("🧠 Bolt's question: try again next mission for a brain star!", "🧠 Soalan Bolt: cuba lagi misi seterusnya untuk bintang otak!")}
+          </p>
+        )}
 
         {saved && saved.newBadges.length > 0 && (
           <section className="panel">
-            <h3>New badge</h3>
-            <p>{saved.newBadges.map((b) => BADGES[b]?.name ?? b).join(", ")}</p>
+            <h3>{t("r.badge")}</h3>
+            <p>{saved.newBadges.map((b) => (lang === "ms" ? BADGES[b]?.name_ms : BADGES[b]?.name) ?? b).join(", ")}</p>
           </section>
         )}
 
         {guess && (
           <p className="panel guess-check">
-            Your guess: the battery would {guess === "yes" ? "last" : "not last"}{" "}
-            until morning. It {batteryLasted ? "lasted" : "ran out"}.{" "}
-            {guessWasRight ? "You were right!" : "Not this time."}
+            {t("r.guess", {
+              g: guess === "yes" ? t("guess.last") : t("guess.notLast"),
+              a: batteryLasted ? t("guess.lasted") : t("guess.ranOut"),
+              v: guessWasRight ? t("guess.right") : t("guess.wrong"),
+            })}
           </p>
         )}
 
         {/* Rewind: try the other way and compare side by side. */}
         <section className="panel">
-          <h3>Rewind</h3>
-          <p>Try the other way at the big choice.</p>
+          <h3>{t("r.rewind")}</h3>
+          <p>{t("r.rewindSub")}</p>
           <div className="button-row">
             <Button
               onClick={() => setRewindPlan({ lifeSupport: 0.2, shielding: 0.6, science: 0.2 })}
             >
-              What if I shielded more?
+              {t("r.moreShield")}
             </Button>
             <Button
               onClick={() => setRewindPlan({ lifeSupport: 0.3, shielding: 0.2, science: 0.5 })}
             >
-              What if I did more science?
+              {t("r.moreScience")}
             </Button>
           </div>
           {rewindOutcome && (
             <div className="compare">
               <div className="compare-col">
-                <strong>Your plan</strong>
+                <strong>{t("r.yourPlan")}</strong>
                 <Stars count={outcome.stars} />
               </div>
               <div className="compare-col">
-                <strong>The other way</strong>
+                <strong>{t("r.otherWay")}</strong>
                 <Stars count={rewindOutcome.stars} />
               </div>
             </div>
@@ -283,9 +419,9 @@ export function MissionScreen({
             stormLabel={`${storm.flareClass}${storm.magnitude} flare`}
           />
           <Button variant="primary" onClick={reset}>
-            Play again
+            {t("r.playAgain")}
           </Button>
-          {onExit && <Button onClick={onExit}>Back to dashboard</Button>}
+          {onExit && <Button onClick={onExit}>{t("r.backDash")}</Button>}
         </div>
       </div>
     );
@@ -308,15 +444,15 @@ export function MissionScreen({
     15,
     Math.min(100, (plan.lifeSupport / LIFE_SUPPORT_HOLD_SHARE.value) * 80),
   );
+  // The camera stays with the player at the command post, so the child plays
+  // from inside the base.
   const baseShot: OutpostShot = running
-    ? strength > 0 || stormPrompt
-      ? "shelter"
-      : "wide"
+    ? "commander"
     : phase === "brief"
       ? "intro"
       : phase === "rover"
         ? "rover"
-        : "wide";
+        : "commander";
   const visual: OutpostVisual = {
     lifeSupport: activePlan.lifeSupport,
     shielding: activePlan.shielding,
@@ -333,6 +469,7 @@ export function MissionScreen({
     crewSheltered: running ? now.crewSheltered : true,
     roverOut: phase === "rover" ? rover : undefined,
     shot: focus && !running ? ROLE_SHOT[focus] : baseShot,
+    player: player("idle"),
   };
 
   const mood: CrewMood = running
@@ -344,11 +481,15 @@ export function MissionScreen({
     : "calm";
 
   const title = dustStorm
-    ? "Dust storm"
-    : `Solar storm, ${storm.peakTime.slice(0, 10)}`;
+    ? t("m.titleDust")
+    : t("m.titleSolar", { d: storm.peakTime.slice(0, 10) });
+
+  const stormSize: 1 | 2 | 3 =
+    storm.flareClass === "M" ? 1 : storm.magnitude >= 5 ? 3 : 2;
+  const stormSizeWord = t(stormSize === 1 ? "storm.medium" : stormSize === 2 ? "storm.strong" : "storm.giant");
 
   // --- What Bolt says, the controls, and the one main button, per phase ---
-  let boltText = bolt.intro;
+  let boltText = t("m.brief");
   let boltExpression: "happy" | "thinking" | "worried" | "asleep" = "happy";
   let boltRich: ReactNode = null;
   let controls: ReactNode = null;
@@ -358,16 +499,17 @@ export function MissionScreen({
     boltExpression = boltAsleep ? "asleep" : "happy";
     boltRich = (
       <>
-        A <Word term="flare">storm</Word> is coming from the Sun. You are the
-        commander. Share the power wisely.
+        {t("m.briefA")}
+        <Word term="flare">{t("m.briefWord")}</Word>
+        {t("m.briefB")}
       </>
     );
     controls = (
       <>
         {isDaily && (
           <section className="panel">
-            <h3>Dare cards</h3>
-            <p className="quiet">Each one adds a star.</p>
+            <h3>{t("m.dares")}</h3>
+            <p className="quiet">{t("m.daresSub")}</p>
             <div className="dare-row">
               {dareContent.cards.map((c) => (
                 <button
@@ -377,22 +519,22 @@ export function MissionScreen({
                   className={dares.has(c.id as DareId) ? "dare-chip on" : "dare-chip"}
                   onClick={() => toggleDare(c.id as DareId)}
                 >
-                  {c.name}
+                  {t(`dare.${c.id}` as Key)}
                 </button>
               ))}
             </div>
           </section>
         )}
-        <p className="quiet">{bolt.truth}</p>
+        <p className="quiet">{t("m.truth")}</p>
       </>
     );
     action = (
       <Button variant="primary" large onClick={() => setPhase(isDaily ? "rover" : "guess")}>
-        I'm ready
+        {t("m.ready")}
       </Button>
     );
   } else if (phase === "rover") {
-    boltText = "Send the rover out to find rocks. But get it home before the storm!";
+    boltText = t("m.roverBolt");
     // Compare the trip home with the time until the storm. The rover is "too
     // far" exactly when its distance passes the warning fraction (the sim's
     // roverCaughtOutside rule). Shown in whole game hours so it reads simply.
@@ -408,28 +550,28 @@ export function MissionScreen({
           showNumbers={showNumbers}
         />
         <p className={tooFar ? "rover-trip warn" : "rover-trip"}>
-          Trip home: about {tripHours} {tripHours === 1 ? "hour" : "hours"}. The
-          warning gives you {warnHours} {warnHours === 1 ? "hour" : "hours"}.{" "}
-          {tooFar
-            ? "The rover can't get back in time."
-            : "The rover gets back before the storm."}
+          {t("m.trip", {
+            t: tripHours,
+            tu: tripHours === 1 ? t("common.hour") : t("common.hours"),
+            w: warnHours,
+            wu: warnHours === 1 ? t("common.hour") : t("common.hours"),
+          })}{" "}
+          {tooFar ? t("m.tooFar") : t("m.inTime")}
         </p>
-        {can3D && (
-          <p className="quiet">Drag the rover in the scene or use the slider.</p>
-        )}
+        {can3D && <p className="quiet">{t("m.dragRover")}</p>}
       </section>
     );
     action = (
       <Button variant="primary" large onClick={() => setPhase("guess")}>
-        Rover is set
+        {t("m.roverSet")}
       </Button>
     );
   } else if (phase === "guess") {
-    boltText = "Will the battery last until morning?";
+    boltText = t("m.guessQ");
     boltExpression = "thinking";
     controls = (
       <section className="panel guess-panel">
-        <h3>Make your guess</h3>
+        <h3>{t("m.guessTitle")}</h3>
         <div className="button-row">
           <Button
             large
@@ -438,7 +580,7 @@ export function MissionScreen({
               setPhase("plan");
             }}
           >
-            Yes, it will last
+            {t("m.guessYes")}
           </Button>
           <Button
             large
@@ -447,65 +589,152 @@ export function MissionScreen({
               setPhase("plan");
             }}
           >
-            No, it will run out
+            {t("m.guessNo")}
           </Button>
         </div>
       </section>
     );
   } else if (phase === "plan") {
-    boltText = "Drag the dot to share the power. Watch the base change. Then press Go.";
+    boltText = t("m.planBolt");
     boltExpression = "thinking";
+    boltText = useTriangle
+      ? t("m.planBolt")
+      : tx(
+          `${stormSizeWord[0].toUpperCase()}${stormSizeWord.slice(1)} is coming. Put all 10 power cubes to work, then press Go.`,
+          `${stormSizeWord[0].toUpperCase()}${stormSizeWord.slice(1)} akan datang. Letakkan kesemua 10 kiub kuasa, kemudian tekan Mula.`,
+        );
     controls = (
       <section className="panel">
-        <PowerTriangle plan={plan} battery={BATTERY_START.value} onChange={setPlan} />
+        {useTriangle ? (
+          <PowerTriangle plan={plan} battery={BATTERY_START.value} onChange={setPlan} />
+        ) : (
+          <PowerCubes
+            plan={plan}
+            onChange={setPlan}
+            onPoolChange={setCubesLeft}
+            startEmpty
+            stormSize={stormSize}
+          />
+        )}
+        <button
+          type="button"
+          className="topbar-link"
+          onClick={() => {
+            setUseTriangle((u) => !u);
+            setCubesLeft(0);
+          }}
+        >
+          {useTriangle
+            ? tx("◻ Use power cubes", "◻ Guna kiub kuasa")
+            : tx("△ Use the triangle (harder)", "△ Guna segi tiga (lebih sukar)")}
+        </button>
       </section>
     );
+    const notReady = !useTriangle && cubesLeft > 0;
     action = (
       <Button
         variant="primary"
         large
+        disabled={notReady}
         onClick={() => {
           setFocus(null);
           setPhase("running");
           setHour(0);
         }}
       >
-        Go
+        {notReady
+          ? tx(`Place ${cubesLeft} more ⚡`, `Letak ${cubesLeft} lagi ⚡`)
+          : t("m.go")}
       </Button>
     );
   } else if (running) {
     boltExpression = strength > 0 || warning ? "worried" : "happy";
+    const coldSoon = now.comfort < COMFORT_OK.value + 12;
+    const radHigh = badgePct > 70;
+    const batLow = now.battery < 15;
     boltText = warning
-      ? "A warning is coming from Earth. It takes a while to reach Mars."
+      ? t("m.warnBolt")
       : stormPrompt && !changed
-        ? "The storm is here. You can change the power once now."
-        : strength > 0
-          ? "Storm! Tiny fast particles are hitting the base."
-          : "The sky is calm. The base is working.";
+        ? tx(
+            `The storm is here! It is ${stormSizeWord}. You can move your power cubes ONE time now. Does the shelter need more?`,
+            `Ribut sudah tiba! Ini ${stormSizeWord}. Kamu boleh alihkan kiub kuasa SEKALI sekarang. Perlukah tempat perlindungan lebih?`,
+          )
+        : radHigh
+          ? tx("☢️ Radiation is getting high! Your shelter is working hard.", "☢️ Radiasi semakin tinggi! Tempat perlindungan kamu sedang bekerja keras.")
+          : coldSoon
+            ? tx("🥶 Brrr! The crew is getting cold. Air & warmth needs power.", "🥶 Brrr! Kru semakin sejuk. Udara & kehangatan perlukan kuasa.")
+            : batLow
+              ? tx("🔋 The battery is almost empty! The panels wait for sunrise.", "🔋 Bateri hampir habis! Panel menunggu matahari terbit.")
+              : strength > 0
+                ? t("m.stormHit")
+                : now.hour % 24 >= 12
+                  ? tx("🌙 Night time. No sun for the panels, so the base uses the battery.", "🌙 Waktu malam. Tiada cahaya untuk panel, jadi pangkalan guna bateri.")
+                  : tx("☀️ Daytime. The solar panels are charging the battery.", "☀️ Waktu siang. Panel solar sedang mengecas bateri.");
     controls =
       stormPrompt && !changed ? (
         <section className="panel storm-change">
-          <h3>Change the power?</h3>
-          <PowerTriangle
-            plan={planAtStorm ?? plan}
-            battery={now.battery}
-            onChange={(p) => setPlanAtStorm(p)}
-          />
+          <h3>{t("m.changeQ")}</h3>
+          {useTriangle ? (
+            <PowerTriangle
+              plan={planAtStorm ?? plan}
+              battery={now.battery}
+              onChange={(p) => setPlanAtStorm(p)}
+            />
+          ) : (
+            <PowerCubes
+              plan={planAtStorm ?? plan}
+              onChange={(p) => setPlanAtStorm(p)}
+              onPoolChange={setStormCubesLeft}
+              stormSize={stormSize}
+              compact
+            />
+          )}
         </section>
       ) : (
         <section className="panel outpost">
-          <Gauge label="Crew comfort" value={now.comfort} showNumbers={showNumbers} unit="" />
-          <Gauge label="Battery" value={now.battery} showNumbers={showNumbers} unit="%" tone="accent" />
-          <Gauge label="Science" value={now.science} showNumbers={showNumbers} unit=" pts" tone="science" />
-          <Gauge label="Radiation badge" value={badgePct} warn showNumbers={showNumbers} unit="%" />
+          <Gauge
+            label={`🌡️ ${t("g.comfort")}`}
+            face={now.comfort < COMFORT_OK.value ? "🥶" : now.comfort < COMFORT_OK.value + 12 ? "😐" : "😊"}
+            value={now.comfort}
+            showNumbers={showNumbers}
+            unit=""
+            line={COMFORT_OK.value}
+            lineLabel={tx("too cold below", "terlalu sejuk di bawah")}
+          />
+          <Gauge
+            label={`🔋 ${t("g.battery")}`}
+            face={now.battery < 15 ? "😟" : "🙂"}
+            value={now.battery}
+            showNumbers={showNumbers}
+            unit="%"
+            tone="accent"
+          />
+          <Gauge
+            label={`🔬 ${t("g.science")}`}
+            face={now.science >= 100 ? "🎉" : "🔎"}
+            value={now.science}
+            showNumbers={showNumbers}
+            unit=" pts"
+            tone="science"
+          />
+          <Gauge
+            label={`☢️ ${t("g.rad")}`}
+            face={badgePct >= 100 ? "😵" : badgePct > 70 ? "😬" : "😎"}
+            value={badgePct}
+            warn
+            showNumbers={showNumbers}
+            unit="%"
+            line={100}
+            lineLabel={tx("NASA limit", "had NASA")}
+          />
           <div className="greenhouse-row">
-            <span>Greenhouse</span>
+            <span>{t("g.greenhouse")}</span>
             <span>
               {now.greenhouse > 60
-                ? "Plants healthy"
+                ? t("g.healthy")
                 : now.greenhouse > 30
-                  ? "Plants drooping"
-                  : "Plants wilting"}
+                  ? t("g.drooping")
+                  : t("g.wilting")}
             </span>
           </div>
         </section>
@@ -515,12 +744,15 @@ export function MissionScreen({
         <Button
           variant="primary"
           large
+          disabled={!useTriangle && stormCubesLeft > 0}
           onClick={() => {
             setChanged(true);
             setStormPrompt(false);
           }}
         >
-          Keep going
+          {!useTriangle && stormCubesLeft > 0
+            ? tx(`Place ${stormCubesLeft} more ⚡`, `Letak ${stormCubesLeft} lagi ⚡`)
+            : t("m.keepGoing")}
         </Button>
       );
     }
@@ -531,22 +763,38 @@ export function MissionScreen({
       <div className="mission-head">
         {onExit && (
           <button type="button" className="topbar-link" onClick={onExit}>
-            Back
+            {t("common.back")}
           </button>
         )}
         <h2 className="mission-title">{title}</h2>
+        <button
+          type="button"
+          className="help-button"
+          onClick={() => setShowHowTo(true)}
+          aria-label={tx("How to play", "Cara bermain")}
+        >
+          ❓ {tx("How to play", "Cara bermain")}
+        </button>
         <span className="sol-clock" aria-live="off">
-          {running ? `Hour ${now.hour} of ${MISSION_HOURS.value}` : "Before the storm"}
+          {running ? t("m.clock", { h: now.hour, t: MISSION_HOURS.value }) : t("m.before")}
         </span>
       </div>
 
-      <aside className="mission-crew" aria-label="Your crew">
+      <aside className="mission-crew" aria-label={t("m.yourCrew")}>
+        <div className="crew-card player-card">
+          <AvatarFigure look={look} size={56} />
+          <span className="crew-text">
+            <strong>{playerName}</strong>
+            <span className="crew-role">{t("m.you")}</span>
+          </span>
+        </div>
         {CREW.map((c) => (
           <CrewCard
             key={c.role}
             role={c.role}
             name={crewNames?.[c.role] ?? c.defaultName}
-            line={c.line}
+            roleLabel={t(`role.${c.role}` as Key)}
+            line={t(`crew.${c.role}.line` as Key)}
             mood={mood}
             selected={focus === c.role}
             onSelect={() => setFocus((f) => (f === c.role ? null : c.role))}
@@ -561,30 +809,61 @@ export function MissionScreen({
       >
         {running && (
           <span className={strength > 0 ? "stage-chip danger" : "stage-chip"}>
-            {strength > 0 ? "Storm" : "Calm"}
+            {strength > 0 ? t("chip.storm") : t("chip.calm")}
           </span>
         )}
+        {running && !warning && (
+          <div className="stage-hud" aria-hidden="true">
+            <span className="hud-name">
+              <AvatarFigure look={look} size={30} /> {playerName}
+            </span>
+            <HudBar label={t("g.rad")} value={badgePct} tone="danger" />
+            <HudBar label={t("g.battery")} value={now.battery} tone="accent" />
+          </div>
+        )}
         {warning && (
-          <div className="stage-warning panel">
+          <div className="stage-warning panel" role="status">
+            <strong className="stage-warning-title">⚠ {t("m.msgTitle")}</strong>
             {can3D ? (
               <MessageView loopSeconds={WARNING_MS / 1000} />
             ) : (
               <div className="signal-track" aria-hidden="true">
-                <span className="signal-end">Earth</span>
+                <span className="signal-end">{t("msg.earth")}</span>
                 <span className="signal" />
-                <span className="signal-end">Mars</span>
+                <span className="signal-end">{t("msg.mars")}</span>
               </div>
             )}
             <p className="quiet">
-              A real message takes between {MARS_MESSAGE_DELAY_MIN.value} and{" "}
-              {MARS_MESSAGE_DELAY_MAX.value} minutes to reach Mars. The game
-              shortens it.
+              {t("m.msgDelay", {
+                a: MARS_MESSAGE_DELAY_MIN.value,
+                b: MARS_MESSAGE_DELAY_MAX.value,
+              })}
             </p>
           </div>
         )}
       </OutpostView>
 
       <div className="mission-controls">{controls}</div>
+
+      {showHowTo && (
+        <HowToPlay
+          onDone={() => {
+            markHowToSeen();
+            setShowHowTo(false);
+          }}
+        />
+      )}
+      {quizState === "open" && running && (
+        <div className="quiz-overlay">
+          <QuizPop
+            question={question}
+            onDone={(ok) => {
+              setBrainStar(ok);
+              setQuizState("done");
+            }}
+          />
+        </div>
+      )}
 
       <div className="mission-bolt">
         <Bolt
@@ -615,6 +894,9 @@ function Gauge({
   showNumbers,
   unit,
   tone,
+  face,
+  line,
+  lineLabel,
 }: {
   label: string;
   value: number;
@@ -622,10 +904,20 @@ function Gauge({
   showNumbers?: boolean;
   unit?: string;
   tone?: "accent" | "science";
+  /** A face that shows at a glance how this part is doing. */
+  face?: string;
+  /** A marker line on the bar (e.g. too cold, NASA limit), 0..100. */
+  line?: number;
+  lineLabel?: string;
 }) {
   return (
     <div className="gauge">
       <span className="gauge-label">
+        {face && (
+          <span className="gauge-face" aria-hidden="true">
+            {face}
+          </span>
+        )}
         {label}
         {showNumbers ? ` — ${Math.round(value)}${unit ?? ""}` : ""}
       </span>
@@ -634,20 +926,37 @@ function Gauge({
           className={warn ? "gauge-fill warn" : tone ? `gauge-fill ${tone}` : "gauge-fill"}
           style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
         />
+        {line !== undefined && (
+          <span
+            className="gauge-line"
+            style={{ left: `${Math.min(99.5, line)}%` }}
+            title={lineLabel}
+            aria-label={lineLabel}
+          />
+        )}
       </span>
     </div>
   );
 }
 
-const ROLE_LABEL: Record<CrewRole, string> = {
-  doctor: "Doctor",
-  engineer: "Engineer",
-  scientist: "Scientist",
-};
+function HudBar({ label, value, tone }: { label: string; value: number; tone: "danger" | "accent" }) {
+  return (
+    <span className="hud-bar">
+      <span className="hud-bar-label">{label}</span>
+      <span className="hud-bar-track">
+        <span
+          className={`hud-bar-fill ${tone}`}
+          style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
+        />
+      </span>
+    </span>
+  );
+}
 
 function CrewCard({
   name,
   role,
+  roleLabel,
   line,
   mood,
   selected,
@@ -655,6 +964,7 @@ function CrewCard({
 }: {
   name: string;
   role: CrewRole;
+  roleLabel: string;
   line: string;
   mood: CrewMood;
   selected: boolean;
@@ -670,7 +980,7 @@ function CrewCard({
       <CrewPortrait role={role} name={name} mood={mood} />
       <span className="crew-text">
         <strong>{name}</strong>
-        <span className="crew-role">{ROLE_LABEL[role]}</span>
+        <span className="crew-role">{roleLabel}</span>
         <span className="crew-line">{line}</span>
       </span>
     </button>
