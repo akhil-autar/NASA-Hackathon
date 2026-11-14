@@ -8,6 +8,7 @@ import { getArchive } from "../data/archive";
 import type { ArchivedStorm } from "../data/archive-types";
 import imageCredits from "../content/image-credits.json";
 import { TextPage } from "../components/TextPage";
+import { TEXTURES } from "../three/assets";
 
 interface Props {
   lastStorm?: ArchivedStorm | null;
@@ -46,6 +47,15 @@ const UNVERIFIED = [
 
 export function DataScreen({ lastStorm, onBack }: Props) {
   const archive = getArchive();
+
+  // Any real textures the team has wired into the 3D scenes (null = the
+  // built-in drawing is used). Credits for them live in image-credits.json
+  // under a "textures/" file path; show whichever are present.
+  const usesTexture = Object.values(TEXTURES).some((t) => t !== null);
+  const textureCredits = imageCredits.images.filter((img) =>
+    img.file.startsWith("textures/"),
+  );
+
   return (
     <TextPage
       title="Our NASA data"
@@ -67,6 +77,30 @@ export function DataScreen({ lastStorm, onBack }: Props) {
           </li>
         ))}
       </ul>
+
+      <section className="panel">
+        <h3>The 3D scenes</h3>
+        <p>
+          The Sun, the Mars outpost and the Earth-to-Mars message are drawings
+          we made for the game, not photos. We shape and colour them from the
+          real storm data so you can see what is happening.
+        </p>
+        {usesTexture && textureCredits.length > 0 && (
+          <>
+            <p className="quiet">Some scenes use real NASA images as textures:</p>
+            <ul className="prose-list">
+              {textureCredits.map((img) => (
+                <li key={img.file}>
+                  <a href={img.link} target="_blank" rel="noreferrer noopener">
+                    {img.title}
+                  </a>{" "}
+                  — {img.credit}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </section>
 
       {lastStorm && (
         <section className="panel">
