@@ -1,0 +1,461 @@
+/* 3D scenes, the mission stage layout, and motion.
+   Loaded after base.css. Uses only the design tokens. */
+
+/* --- Scene frame: the canvas sits exactly over the still image --- */
+.scene-slot {
+  isolation: isolate;
+}
+
+.scene-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  animation: scene-in 700ms ease-out both;
+}
+
+.scene-canvas canvas {
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.scene-slot > :not(.scene-still):not(.scene-canvas):not(.sr-only) {
+  z-index: 2;
+}
+
+@keyframes scene-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* --- Dashboard Sun --- */
+.dash-sun {
+  min-height: 46vh;
+  background: var(--ground);
+}
+
+.sun-caption {
+  position: absolute;
+  left: calc(var(--space) * 2);
+  bottom: calc(var(--space) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface);
+  border-radius: var(--radius-panel);
+  padding: var(--space) calc(var(--space) * 2);
+  max-width: calc(100% - var(--space) * 4);
+  pointer-events: none;
+}
+
+.sun-caption-main {
+  font-size: var(--size-body);
+  font-weight: 700;
+}
+
+.sun-caption .quiet,
+.sun-hint {
+  font-size: var(--size-small);
+}
+
+.sun-hint {
+  position: absolute;
+  right: calc(var(--space) * 2);
+  top: calc(var(--space) * 2);
+  background: var(--surface);
+  border-radius: var(--radius-button);
+  padding: 4px calc(var(--space) * 1.5);
+  pointer-events: none;
+}
+
+@media (min-width: 1024px) {
+  .dash-sun {
+    min-height: min(560px, 62vh);
+  }
+}
+
+/* Timeline bars grow up from the rail; height = real flare strength. */
+.timeline-rail {
+  height: 44px;
+  background: none;
+  border-bottom: 4px solid var(--surface-raised);
+  border-radius: 0;
+}
+
+.timeline-tick {
+  top: auto;
+  bottom: 0;
+  width: 3px;
+  border-radius: 2px 2px 0 0;
+  transform-origin: bottom;
+  animation: bar-grow 500ms ease-out both;
+}
+
+@keyframes bar-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+/* --- Mission: one persistent stage (crew | outpost | controls) --- */
+.mission {
+  display: grid;
+  gap: calc(var(--space) * 2);
+  padding-top: var(--space);
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "head"
+    "stage"
+    "crew"
+    "bolt"
+    "controls";
+}
+
+.mission-head {
+  grid-area: head;
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--space) * 2);
+  flex-wrap: wrap;
+}
+
+.mission-title {
+  margin: 0;
+  font-size: var(--size-heading);
+  flex: 1;
+}
+
+.mission-head .sol-clock {
+  font-size: var(--size-small);
+  color: var(--ink-quiet);
+  font-variant-numeric: tabular-nums;
+}
+
+.mission-stage {
+  grid-area: stage;
+  min-height: 40vh;
+}
+
+.mission .mission-crew {
+  grid-area: crew;
+  display: flex;
+  flex-direction: row;
+  gap: var(--space);
+}
+
+.mission-controls {
+  grid-area: controls;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 2);
+  min-width: 0;
+}
+
+.mission-bolt {
+  grid-area: bolt;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 2);
+}
+
+.mission-action {
+  display: flex;
+}
+
+.mission-action .btn,
+.mission-action button {
+  flex: 1;
+}
+
+/* Crew cards are buttons: tap one and the camera looks at their part of the base. */
+.mission .crew-card {
+  border: 2px solid transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--size-small);
+  cursor: pointer;
+  min-height: 48px;
+  transition: transform 160ms ease-out, border-color 160ms ease-out,
+    background-color 160ms ease-out;
+}
+
+.mission .crew-card:hover {
+  background: var(--surface-raised);
+}
+
+.mission .crew-card:active {
+  transform: scale(0.98);
+}
+
+.mission .crew-card.selected {
+  border-color: var(--ink-quiet);
+  background: var(--surface-raised);
+}
+
+.mission .crew-card .crew-portrait-svg {
+  flex: 0 0 auto;
+}
+
+.crew-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.crew-line {
+  display: none;
+}
+
+/* The crew's lines are part of the briefing; on phones they show only then. */
+.phase-brief .crew-line {
+  display: block;
+}
+
+/* Small label on the stage: calm or storm. */
+.stage-chip {
+  position: absolute;
+  left: calc(var(--space) * 2);
+  top: calc(var(--space) * 2);
+  background: var(--surface);
+  color: var(--ink);
+  border-radius: var(--radius-button);
+  padding: 4px calc(var(--space) * 2);
+  font-size: var(--size-small);
+  font-weight: 700;
+}
+
+.stage-chip.danger {
+  background: var(--danger);
+  color: var(--ground);
+}
+
+/* The late warning travelling from Earth, shown over the stage. */
+.stage-warning {
+  position: absolute;
+  right: calc(var(--space) * 2);
+  top: calc(var(--space) * 2);
+  width: min(360px, calc(100% - var(--space) * 4));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+  animation: rise-in 320ms ease-out backwards;
+}
+
+.stage-warning p {
+  margin: 0;
+  font-size: var(--size-small);
+}
+
+.message-view {
+  height: 150px;
+  background: var(--ground);
+}
+
+.message-view .scene-still {
+  opacity: 0.35;
+}
+
+.message-end {
+  position: absolute;
+  bottom: var(--space);
+  font-size: var(--size-small);
+  color: var(--ink);
+  background: var(--surface);
+  border-radius: var(--radius-button);
+  padding: 2px calc(var(--space) * 1.5);
+}
+
+.message-end-earth { left: var(--space); }
+.message-end-mars { right: var(--space); }
+
+.call-scene {
+  height: 220px;
+}
+
+.guess-panel h3,
+.storm-change h3 {
+  margin: 0 0 var(--space);
+}
+
+.gauge-fill.accent { background: var(--accent); }
+.gauge-fill.science { background: var(--science); }
+
+.result-scene {
+  height: 34vh;
+  min-height: 220px;
+}
+
+/* --- Water wall: the shelter and its growing tank stack --- */
+.water-scene {
+  height: 36vh;
+  min-height: 240px;
+  margin-bottom: calc(var(--space) * 2);
+}
+
+/* Phones: the outpost stays pinned at the top while the child works the
+   controls beneath it, so they can watch the base react. The main button is
+   fixed at the bottom, within thumb reach. */
+@media (max-width: 599px) {
+  .mission {
+    padding-bottom: 96px;
+    grid-template-areas:
+      "head"
+      "stage"
+      "bolt"
+      "controls"
+      "crew";
+  }
+  .mission-stage {
+    position: sticky;
+    top: var(--space);
+    z-index: 4;
+    min-height: 0;
+    height: 36vh;
+    animation: none;
+  }
+  .mission-action {
+    position: fixed;
+    left: var(--margin-page);
+    right: var(--margin-page);
+    bottom: calc(var(--space) * 2);
+    z-index: 5;
+  }
+  .mission .crew-card {
+    flex-direction: column;
+    padding: var(--space);
+  }
+  .mission-title {
+    font-size: var(--size-body);
+  }
+}
+
+@media (min-width: 600px) and (max-width: 1023px) {
+  .mission {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      "head head"
+      "stage stage"
+      "crew crew"
+      "bolt controls";
+  }
+  .mission-stage {
+    min-height: 46vh;
+  }
+}
+
+/* Laptop: crew | outpost | controls, with Bolt and the main button beneath. */
+@media (min-width: 1024px) {
+  .mission {
+    grid-template-columns: 250px minmax(0, 1fr) 340px;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-areas:
+      "head head head"
+      "crew stage controls"
+      "bolt bolt bolt";
+    height: calc(100vh - 150px);
+    min-height: 600px;
+  }
+  .mission .mission-crew {
+    flex-direction: column;
+    overflow-y: auto;
+    min-height: 0;
+  }
+  .mission .crew-card .crew-portrait-svg {
+    width: 56px;
+    height: 56px;
+  }
+  .mission .crew-card {
+    flex: 0 0 auto;
+    flex-direction: row;
+    align-items: center;
+    text-align: left;
+    gap: calc(var(--space) * 1.5);
+  }
+  .crew-line {
+    display: block;
+  }
+  .mission-stage {
+    min-height: 0;
+    height: 100%;
+  }
+  .mission-controls {
+    overflow-y: auto;
+  }
+  .mission-bolt {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .mission-bolt > :first-child {
+    flex: 1;
+    min-width: 0;
+  }
+  .mission-action {
+    flex: 0 0 300px;
+  }
+  .mission-controls .triangle-svg {
+    max-width: 300px;
+  }
+}
+
+/* --- Motion: parts of each screen enter in order --- */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dashboard > *,
+.dash-side > *,
+.mission > *,
+.result-screen > *,
+.screen > *,
+.text-page > * {
+  animation: rise-in 420ms ease-out backwards;
+}
+
+.dashboard > :nth-child(2), .dash-side > :nth-child(2), .mission > :nth-child(2),
+.result-screen > :nth-child(2), .screen > :nth-child(2), .text-page > :nth-child(2) { animation-delay: 70ms; }
+.dashboard > :nth-child(3), .dash-side > :nth-child(3), .mission > :nth-child(3),
+.result-screen > :nth-child(3), .screen > :nth-child(3), .text-page > :nth-child(3) { animation-delay: 140ms; }
+.dashboard > :nth-child(4), .mission > :nth-child(4),
+.result-screen > :nth-child(4), .screen > :nth-child(4), .text-page > :nth-child(4) { animation-delay: 210ms; }
+.dashboard > :nth-child(n + 5), .mission > :nth-child(n + 5),
+.result-screen > :nth-child(n + 5), .screen > :nth-child(n + 5), .text-page > :nth-child(n + 5) { animation-delay: 280ms; }
+
+/* Controls swap in when the phase changes. */
+.mission-controls > * {
+  animation: rise-in 320ms ease-out backwards;
+}
+
+/* Press feedback on the main interactive surfaces. */
+.dash-mini,
+.dare-chip {
+  transition: transform 160ms ease-out, background-color 160ms ease-out,
+    border-color 160ms ease-out;
+}
+
+.dash-mini:hover {
+  background: var(--surface-raised);
+}
+
+.dash-mini:active,
+.dare-chip:active {
+  transform: scale(0.97);
+}
+
+/* Stars pop in one after another on the result screen. */
+.result-head .star.on {
+  animation: star-pop 420ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.result-head .star.on:nth-child(2) { animation-delay: 140ms; }
+.result-head .star.on:nth-child(3) { animation-delay: 280ms; }
+.result-head .star.on:nth-child(n + 4) { animation-delay: 420ms; }
+
+@keyframes star-pop {
+  from { opacity: 0; transform: scale(0.3); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* The timeline handle uses the accent colour, not the browser's default blue. */
+.timeline-range {
+  accent-color: var(--accent);
+}

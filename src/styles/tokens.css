@@ -1,0 +1,40 @@
+/* The single source of design tokens. Everything in the UI uses only these. */
+
+:root {
+  /* colour: one ground, one ink, one accent */
+  --ground: #0c0d0f; /* page background, neutral near-black */
+  --surface: #17191c; /* panels */
+  --surface-raised: #22252a; /* controls inside panels */
+  --ink: #f2efea; /* all running text */
+  --ink-quiet: #a9a59e; /* secondary notes only */
+  --accent: #ffae1a; /* the ONE main action per screen, and the triangle dot */
+  --life-support: #5fbf8f;
+  --shielding: #6fa8dc;
+  --science: #e3d5b8;
+  --danger: #e5533d; /* radiation badge near its limit only */
+
+  /* type: one family, four sizes */
+  --font: "Atkinson Hyperlegible Next", system-ui, -apple-system, sans-serif;
+  --size-display: clamp(2.5rem, 5vw, 4.5rem);
+  --size-heading: 1.75rem;
+  --size-body: 1.25rem; /* 1.125rem under 600px wide */
+  --size-small: 1rem; /* nothing smaller than this, anywhere */
+
+  /* derived states (kept here so components use only tokens) */
+  --ink-on-accent: #241400; /* dark ink that meets contrast on --accent */
+  --accent-hover: #ffbe47;
+  --surface-raised-hover: #2c3036;
+
+  /* shape and space */
+  --radius-panel: 12px;
+  --radius-button: 999px;
+  --space: 8px; /* use multiples of this */
+  --margin-page: 32px; /* 16px under 600px wide */
+}
+
+@media (max-width: 599px) {
+  :root {
+    --size-body: 1.125rem;
+    --margin-page: 16px;
+  }
+}

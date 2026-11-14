@@ -1,4 +1,6 @@
 import parent from "../content/parent.json";
+import { Button } from "../components/Button";
+import { TextPage } from "../components/TextPage";
 import { loadProgress } from "../storage/progress";
 
 interface Props {
@@ -10,18 +12,22 @@ export function ParentScreen({ onBack, onSimplified }: Props) {
   const progress = loadProgress();
 
   return (
-    <div className="screen">
-      <h2>For grown-ups</h2>
-      <p className="disclaimer">{parent.intro}</p>
+    <TextPage
+      title="For grown-ups"
+      headerImage="img/base-site-map.jpg"
+      headerAlt="Jezero Crater on Mars, seen from orbit."
+      onBack={onBack}
+    >
+      <p>{parent.intro}</p>
 
-      <section className="card">
-        <h3 className="card-title">What they played</h3>
-        <p className="card-body">
+      <section className="panel">
+        <h3>What they played</h3>
+        <p>
           Missions played: {progress.missionsPlayed}. Stars earned:{" "}
           {progress.totalStars}.
         </p>
         {progress.log.length > 0 && (
-          <ul className="log-list">
+          <ul className="prose-list">
             {[...progress.log].slice(-5).reverse().map((e, i) => (
               <li key={i}>{e.text}</li>
             ))}
@@ -29,26 +35,21 @@ export function ParentScreen({ onBack, onSimplified }: Props) {
         )}
       </section>
 
-      <section className="card">
-        <h3 className="card-title">The idea it teaches</h3>
-        <p className="card-body">{parent.tradeOff}</p>
+      <section className="panel">
+        <h3>The idea it teaches</h3>
+        <p>{parent.tradeOff}</p>
       </section>
 
-      <section className="card">
-        <h3 className="card-title">Two questions to ask</h3>
-        <ul className="log-list">
+      <section className="panel">
+        <h3>Two questions to ask</h3>
+        <ul className="prose-list">
           {parent.questions.map((q, i) => (
             <li key={i}>{q}</li>
           ))}
         </ul>
       </section>
 
-      <button type="button" className="big-button ghost" onClick={onSimplified}>
-        What we made simpler
-      </button>
-      <button type="button" className="big-button" onClick={onBack}>
-        Back
-      </button>
-    </div>
+      <Button onClick={onSimplified}>What we made simpler</Button>
+    </TextPage>
   );
 }
