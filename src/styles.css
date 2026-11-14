@@ -540,6 +540,17 @@ button,
   color: var(--danger);
 }
 
+.rover-trip {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: var(--ink-dim);
+}
+
+.rover-trip.warn {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 /* Dare cards */
 .dare-row {
   display: flex;

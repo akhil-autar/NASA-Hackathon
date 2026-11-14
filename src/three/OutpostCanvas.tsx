@@ -703,6 +703,58 @@ function RoverTrackMarks() {
   );
 }
 
+// Dragging the rover in the scene: an invisible plane over the ground catches
+// the pointer, we find the nearest point on the track, and report it back as a
+// 0..1 distance (the same value the RoverTrack slider uses). Only mounted in
+// the rover phase, when a drag handler is given.
+const ROVER_SAMPLES = ROVER_PATH.getSpacedPoints(60);
+
+function nearestRoverDistance(point: THREE.Vector3): number {
+  let bestI = 0;
+  let bestD = Infinity;
+  for (let i = 0; i < ROVER_SAMPLES.length; i++) {
+    const p = ROVER_SAMPLES[i];
+    const dx = p.x - point.x;
+    const dz = p.z - point.z;
+    const d = dx * dx + dz * dz;
+    if (d < bestD) {
+      bestD = d;
+      bestI = i;
+    }
+  }
+  const u = bestI / (ROVER_SAMPLES.length - 1); // position along the track
+  // The Rover maps roverOut 0..1 to u = 0.04 + roverOut*0.9; invert that.
+  return THREE.MathUtils.clamp((u - 0.04) / 0.9, 0, 1);
+}
+
+function RoverDragPlane({ onRoverDrag }: { onRoverDrag: (v: number) => void }) {
+  const dragging = useRef(false);
+  const handle = (e: { point: THREE.Vector3; stopPropagation: () => void }) => {
+    e.stopPropagation();
+    onRoverDrag(nearestRoverDistance(e.point));
+  };
+  return (
+    <mesh
+      rotation={[-Math.PI / 2, 0, 0]}
+      position={[16, 0.03, 8]}
+      onPointerDown={(e) => {
+        dragging.current = true;
+        (e.target as Element)?.setPointerCapture?.(e.pointerId);
+        handle(e);
+      }}
+      onPointerMove={(e) => dragging.current && handle(e)}
+      onPointerUp={(e) => {
+        dragging.current = false;
+        (e.target as Element)?.releasePointerCapture?.(e.pointerId);
+      }}
+    >
+      {/* Covers the whole track area; invisible but still hit-tested. */}
+      <planeGeometry args={[40, 20]} />
+      <meshBasicMaterial transparent opacity={0} depthWrite={false} />
+    </mesh>
+  );
+}
+
 // --- Crew -------------------------------------------------------------------
 
 const CREW_HOME = [
@@ -981,7 +1033,15 @@ function CameraRig({ shot, live }: { shot: OutpostShot; live: Live }) {
 
 // --- Putting it together ----------------------------------------------------
 
-function World({ visual, shadows }: { visual: OutpostVisual; shadows: boolean }) {
+function World({
+  visual,
+  shadows,
+  onRoverDrag,
+}: {
+  visual: OutpostVisual;
+  shadows: boolean;
+  onRoverDrag?: (v: number) => void;
+}) {
   const live = useMemo<Live>(() => {
     const sunDir = new THREE.Vector3();
     const day = sunDirectionForHour(visual.hour, sunDir);
@@ -1038,6 +1098,7 @@ function World({ visual, shadows }: { visual: OutpostVisual; shadows: boolean })
       <SolarArray live={live} />
       <BatteryPost live={live} />
       <Rover live={live} roverOut={visual.roverOut} />
+      {onRoverDrag && <RoverDragPlane onRoverDrag={onRoverDrag} />}
       <Crew live={live} crewSheltered={visual.crewSheltered} />
       <Dust live={live} />
       <StormParticles live={live} />
@@ -1070,9 +1131,11 @@ interface Props {
   visual: OutpostVisual;
   /** False when the scene is off screen or the tab is hidden. */
   active: boolean;
+  /** Rover phase: drag the rover in the scene; reports a 0..1 distance. */
+  onRoverDrag?: (v: number) => void;
 }
 
-export default function OutpostCanvas({ visual, active }: Props) {
+export default function OutpostCanvas({ visual, active, onRoverDrag }: Props) {
   const small = isSmallScreen();
   const maxDpr = Math.min(window.devicePixelRatio || 1, small ? 1.5 : 2);
   return (
@@ -1088,7 +1151,7 @@ export default function OutpostCanvas({ visual, active }: Props) {
         gl.outputColorSpace = THREE.SRGBColorSpace;
       }}
     >
-      <World visual={visual} shadows />
+      <World visual={visual} shadows onRoverDrag={onRoverDrag} />
       <AdaptiveQuality max={maxDpr} />
     </Canvas>
   );

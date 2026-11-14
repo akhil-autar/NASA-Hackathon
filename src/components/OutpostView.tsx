@@ -8,6 +8,8 @@ interface Props {
   visual: OutpostVisual;
   className?: string;
   children?: React.ReactNode;
+  /** Rover phase only: drag the rover in the scene; reports a 0..1 distance. */
+  onRoverDrag?: (v: number) => void;
 }
 
 /** Words for screen readers, built from the same state the scene draws. */
@@ -25,14 +27,16 @@ function describe(v: OutpostVisual): string {
 }
 
 /** The Mars outpost: 3D when the device can show it, a NASA still otherwise. */
-export function OutpostView({ visual, className, children }: Props) {
+export function OutpostView({ visual, className, children, onRoverDrag }: Props) {
   return (
     <SceneFrame
       still="img/mars-panorama.jpg"
       alt="The Mars outpost."
       description={describe(visual)}
       className={className}
-      render={(active) => <OutpostCanvas visual={visual} active={active} />}
+      render={(active) => (
+        <OutpostCanvas visual={visual} active={active} onRoverDrag={onRoverDrag} />
+      )}
     >
       {children}
     </SceneFrame>

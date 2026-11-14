@@ -393,6 +393,12 @@ export function MissionScreen({
     );
   } else if (phase === "rover") {
     boltText = "Send the rover out to find rocks. But get it home before the storm!";
+    // Compare the trip home with the time until the storm. The rover is "too
+    // far" exactly when its distance passes the warning fraction (the sim's
+    // roverCaughtOutside rule). Shown in whole game hours so it reads simply.
+    const warnHours = Math.round(warningFraction(storm) * MISSION_HOURS.value);
+    const tripHours = Math.max(1, Math.round(rover * MISSION_HOURS.value));
+    const tooFar = rover > warningFraction(storm);
     controls = (
       <section className="panel">
         <RoverTrack
@@ -401,6 +407,16 @@ export function MissionScreen({
           safeFraction={warningFraction(storm)}
           showNumbers={showNumbers}
         />
+        <p className={tooFar ? "rover-trip warn" : "rover-trip"}>
+          Trip home: about {tripHours} {tripHours === 1 ? "hour" : "hours"}. The
+          warning gives you {warnHours} {warnHours === 1 ? "hour" : "hours"}.{" "}
+          {tooFar
+            ? "The rover can't get back in time."
+            : "The rover gets back before the storm."}
+        </p>
+        {can3D && (
+          <p className="quiet">Drag the rover in the scene or use the slider.</p>
+        )}
       </section>
     );
     action = (
@@ -538,7 +554,11 @@ export function MissionScreen({
         ))}
       </aside>
 
-      <OutpostView visual={visual} className="mission-stage">
+      <OutpostView
+        visual={visual}
+        className="mission-stage"
+        onRoverDrag={phase === "rover" ? setRover : undefined}
+      >
         {running && (
           <span className={strength > 0 ? "stage-chip danger" : "stage-chip"}>
             {strength > 0 ? "Storm" : "Calm"}
