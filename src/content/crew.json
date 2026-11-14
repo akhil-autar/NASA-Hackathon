@@ -1,0 +1,20 @@
+{
+  "doctor": {
+    "role": "doctor",
+    "defaultName": "Dr. Ada",
+    "wants": "shielding",
+    "line": "Put power in the shelter. I want everyone safe."
+  },
+  "engineer": {
+    "role": "engineer",
+    "defaultName": "Eng. Rae",
+    "wants": "lifeSupport",
+    "line": "Keep the air and heat running, or we all get cold."
+  },
+  "scientist": {
+    "role": "scientist",
+    "defaultName": "Dr. Sol",
+    "wants": "science",
+    "line": "We only get one chance to study this rock."
+  }
+}

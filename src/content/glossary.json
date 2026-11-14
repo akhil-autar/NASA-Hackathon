@@ -1,0 +1,9 @@
+{
+  "radiation": "Tiny, fast bits from the Sun and space. A little is fine. A lot is bad for your body.",
+  "dose": "How much radiation your body has collected so far.",
+  "sol": "One day on Mars. It is a little longer than a day on Earth.",
+  "flare": "A giant flash on the Sun.",
+  "lifeSupport": "The air, water, warmth and plants that keep the crew alive.",
+  "shielding": "Thick walls and the storm shelter that stop radiation.",
+  "science": "The rover and the lab that make discoveries."
+}

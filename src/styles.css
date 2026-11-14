@@ -1,0 +1,374 @@
+:root {
+  --bg: #0b0d17;
+  --panel: #141829;
+  --panel-2: #1b2036;
+  --ink: #eaf0ff;
+  --ink-dim: #a7b0cf;
+  --accent: #ffd24a;
+  --blue: #3b8ee6;
+  --warn: #ff6b6b;
+  --ok: #4ad295;
+  --radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.app {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 12px 14px 32px;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.app-header h1 {
+  font-size: 1.4rem;
+  letter-spacing: 0.04em;
+  margin: 0;
+}
+
+/* Every tappable control is at least 48px tall for small fingers. */
+button,
+.big-button,
+.sound-toggle,
+.word-button,
+.bolt-speak {
+  min-height: 48px;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.big-button {
+  width: 100%;
+  margin-top: 14px;
+  padding: 14px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--blue);
+  color: white;
+  font-weight: 700;
+}
+
+.big-button.go {
+  background: var(--ok);
+  color: #03251a;
+  font-size: 1.3rem;
+}
+
+.sound-toggle {
+  border: 1px solid #2b3355;
+  border-radius: var(--radius);
+  background: var(--panel);
+  color: var(--ink);
+  padding: 8px 12px;
+}
+
+.screen {
+  margin-top: 10px;
+}
+
+/* --- Bolt --- */
+.bolt {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+
+.bolt-face {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: linear-gradient(160deg, #3b8ee6, #1d4e86);
+  display: grid;
+  place-items: center;
+  box-shadow: inset 0 0 0 3px #9fc6ff;
+}
+
+.bolt-eyes {
+  display: flex;
+  gap: 8px;
+}
+
+.bolt-eye {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #eaf6ff;
+  animation: blink 4s infinite;
+}
+
+@keyframes blink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+
+.bolt-bubble {
+  flex: 1;
+}
+
+.bolt-text {
+  margin: 0 0 8px;
+  font-size: 1.15rem;
+}
+
+.bolt-speak {
+  border: 1px solid #2b3355;
+  background: var(--panel-2);
+  color: var(--ink);
+  border-radius: 10px;
+  padding: 6px 10px;
+}
+
+/* --- Crew --- */
+.crew-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.crew-card {
+  flex: 1;
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 10px;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.crew-portrait {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 6px;
+  border-radius: 50%;
+  background: linear-gradient(160deg, #c1623a, #7c2d12);
+  display: grid;
+  place-items: center;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.crew-role {
+  display: block;
+  color: var(--ink-dim);
+  font-size: 0.75rem;
+}
+
+.truth-line {
+  margin: 14px 2px;
+  color: var(--ink-dim);
+  font-size: 0.9rem;
+}
+
+/* --- Power Triangle --- */
+.triangle-wrap {
+  margin: 10px 0;
+}
+
+.triangle-svg {
+  width: 100%;
+  height: auto;
+  touch-action: none;
+  background: var(--panel);
+  border-radius: var(--radius);
+}
+
+.tri-label {
+  font-size: 4px;
+  fill: var(--ink);
+  font-weight: 700;
+}
+
+.triangle-shares {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin-top: 8px;
+  color: var(--ink-dim);
+  font-size: 0.95rem;
+}
+
+.battery-readout {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+/* --- Guess --- */
+.guess-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.guess-check {
+  margin-top: 14px;
+  background: var(--panel);
+  padding: 10px;
+  border-radius: var(--radius);
+}
+
+/* --- Running / gauges --- */
+.sol-clock {
+  margin: 6px 0;
+  font-size: 1.1rem;
+}
+
+.outpost {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+
+.gauge {
+  margin-bottom: 10px;
+}
+
+.gauge-label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--ink-dim);
+  margin-bottom: 3px;
+}
+
+.gauge-bar {
+  display: block;
+  height: 14px;
+  border-radius: 8px;
+  background: #0c0f1d;
+  overflow: hidden;
+}
+
+.gauge-fill {
+  display: block;
+  height: 100%;
+  background: var(--ok);
+  transition: width 0.2s linear;
+}
+
+.gauge-fill.warn {
+  background: var(--warn);
+}
+
+.storm-banner {
+  margin-top: 8px;
+  padding: 8px;
+  border-radius: 10px;
+  background: #0c0f1d;
+  color: var(--ink-dim);
+  text-align: center;
+}
+
+.storm-banner.on {
+  background: #4a1414;
+  color: #ffd0d0;
+  font-weight: 700;
+}
+
+.storm-change {
+  margin-top: 12px;
+  background: var(--panel-2);
+  border-radius: var(--radius);
+  padding: 10px;
+}
+
+/* --- Results --- */
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 12px;
+}
+
+.card.muted {
+  background: var(--panel-2);
+  color: var(--ink-dim);
+}
+
+.card-title {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  color: var(--accent);
+}
+
+.card-body {
+  margin: 0;
+}
+
+.stars {
+  font-size: 2rem;
+  text-align: center;
+}
+
+.star.on {
+  color: var(--accent);
+}
+
+.star.off {
+  color: #2b3050;
+}
+
+/* --- Word meanings --- */
+.word {
+  position: relative;
+}
+
+.word-button {
+  min-height: 0;
+  display: inline;
+  padding: 0 2px;
+  border: none;
+  background: none;
+  color: var(--accent);
+  text-decoration: underline dotted;
+  font: inherit;
+}
+
+.word-meaning {
+  display: block;
+  margin-top: 4px;
+  padding: 6px 8px;
+  background: var(--panel-2);
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--ink);
+}
+
+/* --- Footer --- */
+.app-footer {
+  margin-top: 24px;
+  color: var(--ink-dim);
+  font-size: 0.8rem;
+}
+
+.app-footer a {
+  color: var(--blue);
+}
