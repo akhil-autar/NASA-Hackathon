@@ -34,31 +34,31 @@ _Done when: screenshots at 1440/768/390 match section 5._
 
 ## Group 3 — Mars outpost (Scene B)
 _Done when: dragging the triangle changes the scene live; game plays with 3D off._
-- [ ] 3.1 Add `three`, `@react-three/fiber`, `@react-three/drei`; `Scene` lazy wrapper with
+- [x] 3.1 Add `three`, `@react-three/fiber`, `@react-three/drei`; `Scene` lazy wrapper with
   capability checks and still fallback; visually-hidden scene description.
-- [ ] 3.2 `OutpostScene` geometry (habitat, greenhouse, shelter, panels, rover, Sun) with Mars
+- [x] 3.2 `OutpostScene` geometry (habitat, greenhouse, shelter, panels, rover, Sun) with Mars
   ground, butterscotch sky, low sun, soft shadows, filmic tone mapping; asset loading with
   coloured-material fallback.
-- [ ] 3.3 Bind scene to game state (life support, shielding, science, battery, dust, storm)
+- [x] 3.3 Bind scene to game state (life support, shielding, science, battery, dust, storm)
   and to the live triangle before Go.
-- [ ] 3.4 Performance: dpr cap 1.5, pause when hidden, adaptive quality.
+- [x] 3.4 Performance: dpr cap 1.5, pause when hidden, adaptive quality.
 - [ ] 3.5 Screenshots + checklist + sim tests + page weight + mission fps; report. **STOP.**
 
 ## Group 4 — Sun and timeline (Scenes A, C)
 _Done when: timeline drag updates the Sun; fallback works._
-- [ ] 4.1 `SunScene` (textured sphere, rotation, Sun-only bloom, active region on storm).
-- [ ] 4.2 Time Machine timeline control bound to the archive; drag updates Sun + one-line
+- [x] 4.1 `SunScene` (textured sphere, rotation, Sun-only bloom, active region on storm).
+- [x] 4.2 Time Machine timeline control bound to the archive; drag updates Sun + one-line
   summary.
-- [ ] 4.3 `MessageScene` (Earth↔Mars travelling light + real delay) for late warning and
+- [x] 4.3 `MessageScene` (Earth↔Mars travelling light + real delay) for late warning and
   Wait-or-act.
-- [ ] 4.4 Sun-to-Mars camera move when a mission starts.
+- [x] 4.4 Sun-to-Mars camera move when a mission starts.
 - [ ] 4.5 Screenshots + checklist + sim tests + fps; report. **STOP.**
 
 ## Group 5 — Motion and polish
 _Done when: the section-11 checklist passes._
-- [ ] 5.1 `Reveal` staggered entrances; meter easing; camera moves (push-in, storm cut, wide
+- [x] 5.1 `Reveal` staggered entrances; meter easing; camera moves (push-in, storm cut, wide
   result) — all gated by reduced motion.
-- [ ] 5.2 Control hover/press/focus feedback everywhere.
+- [x] 5.2 Control hover/press/focus feedback everywhere.
 - [ ] 5.3 In-scene interactions: rover-run drag with trip-vs-warning line; water tanks drag &
   empty; wait-or-act hold.
 - [ ] 5.4 Loading / error / offline states for each screen (incl. archived-storm message).
