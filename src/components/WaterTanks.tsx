@@ -12,10 +12,10 @@ interface Props {
   onChange: (a: TankAssignment) => void;
 }
 
-const JOBS: { id: Job; label: string; emoji: string }[] = [
-  { id: "drinking", label: "Drinking", emoji: "🥤" },
-  { id: "airMaker", label: "Air-maker", emoji: "💨" },
-  { id: "shieldWall", label: "Shield wall", emoji: "🧱" },
+const JOBS: { id: Job; label: string }[] = [
+  { id: "drinking", label: "Drinking" },
+  { id: "airMaker", label: "Air-maker" },
+  { id: "shieldWall", label: "Shield wall" },
 ];
 
 /**
@@ -42,7 +42,7 @@ export function WaterTanks({ total, assignment, onChange }: Props) {
       {JOBS.map((j) => (
         <div className="tank-job" key={j.id}>
           <span className="tank-job-label">
-            {j.emoji} {j.label}
+            {j.label}
           </span>
           <div className="tank-stepper">
             <button

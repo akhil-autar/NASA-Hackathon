@@ -82,7 +82,7 @@ export function DataScreen({ lastStorm, onBack }: Props) {
       )}
 
       <section className="card muted">
-        <h3 className="card-title">⚠️ Unverified numbers</h3>
+        <h3 className="card-title">Unverified numbers</h3>
         <p className="card-body">
           These radiation numbers are placeholders until real RadLab readings
           are pulled in. Badge limit {RADIATION_BADGE_LIMIT.value} (game units).

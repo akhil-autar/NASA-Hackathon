@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { APP_NAME } from "../config";
+import { Icon } from "./Icon";
 
 interface Props {
   stars: number;
@@ -79,8 +80,9 @@ export function ShareCard({ stars, stormDate, stormLabel }: Props) {
   }, [makeBlob]);
 
   return (
-    <button type="button" className="big-button" onClick={share}>
-      📤 Share my stars
+    <button type="button" className="btn btn-secondary btn-block" onClick={share}>
+      <Icon name="share" />
+      Share my stars
     </button>
   );
 }
