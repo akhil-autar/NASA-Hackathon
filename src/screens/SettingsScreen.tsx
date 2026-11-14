@@ -13,12 +13,12 @@ export function SettingsScreen({ settings, onChange, onBack }: Props) {
       <Bolt text="Settings. You can change how the game looks and sounds." />
 
       <Toggle
-        label="🔊 Sound and Bolt's voice"
+        label="Sound and Bolt's voice"
         on={settings.soundOn}
         onToggle={() => onChange({ soundOn: !settings.soundOn })}
       />
       <Toggle
-        label="🔢 Show me the numbers"
+        label="Show me the numbers"
         hint="Swap the pictures for real values and units."
         on={settings.showNumbers}
         onToggle={() => onChange({ showNumbers: !settings.showNumbers })}

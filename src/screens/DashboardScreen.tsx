@@ -43,54 +43,41 @@ export function DashboardScreen({ profile, onGo, onPlayBirthday }: Props) {
           <Stars count={Math.min(3, progress.totalStars)} />
         </div>
         {progress.badges.length > 0 && (
-          <div className="badge-row">
-            {progress.badges.map((b) => (
-              <span key={b} className="badge" title={BADGES[b]?.name ?? b}>
-                {BADGES[b]?.emoji ?? "🏅"}
-              </span>
-            ))}
+          <div className="badge-block">
+            <span className="badge-label">Badges</span>
+            <div className="badge-row">
+              {progress.badges.map((b) => (
+                <span key={b} className="badge">
+                  {BADGES[b]?.name ?? b}
+                </span>
+              ))}
+            </div>
           </div>
         )}
       </section>
 
       <div className="dash-grid">
-        <button type="button" className="dash-card" onClick={() => onGo("today")}>
-          <span className="dash-emoji">☀️</span>
-          Today's Sun
+        <button type="button" className="dash-card" onClick={() => onGo("today")}>          Today's Sun
         </button>
-        <button type="button" className="dash-card" onClick={() => onGo("timeMachine")}>
-          <span className="dash-emoji">🕹️</span>
-          Storm Time Machine
+        <button type="button" className="dash-card" onClick={() => onGo("timeMachine")}>          Storm Time Machine
         </button>
-        <button type="button" className="dash-card" onClick={() => onGo("missions")}>
-          <span className="dash-emoji">🧪</span>
-          More missions
+        <button type="button" className="dash-card" onClick={() => onGo("missions")}>          More missions
         </button>
         {near && (
           <button
             type="button"
             className="dash-card"
             onClick={() => onPlayBirthday(near.storm)}
-          >
-            <span className="dash-emoji">🎂</span>
-            Sun on your birthday
+          >            Sun on your birthday
           </button>
         )}
-        <button type="button" className="dash-card" onClick={() => onGo("class")}>
-          <span className="dash-emoji">👩‍🏫</span>
-          Class mode
+        <button type="button" className="dash-card" onClick={() => onGo("class")}>          Class mode
         </button>
-        <button type="button" className="dash-card" onClick={() => onGo("parent")}>
-          <span className="dash-emoji">👪</span>
-          For grown-ups
+        <button type="button" className="dash-card" onClick={() => onGo("parent")}>          For grown-ups
         </button>
-        <button type="button" className="dash-card" onClick={() => onGo("data")}>
-          <span className="dash-emoji">🛰️</span>
-          Our NASA data
+        <button type="button" className="dash-card" onClick={() => onGo("data")}>          Our NASA data
         </button>
-        <button type="button" className="dash-card" onClick={() => onGo("settings")}>
-          <span className="dash-emoji">⚙️</span>
-          Settings
+        <button type="button" className="dash-card" onClick={() => onGo("settings")}>          Settings
         </button>
       </div>
 

@@ -171,9 +171,7 @@ export function MissionScreen({
           <section className="card">
             <h3 className="card-title">New badge!</h3>
             <p className="card-body">
-              {saved.newBadges
-                .map((b) => `${BADGES[b]?.emoji ?? "🏅"} ${BADGES[b]?.name ?? b}`)
-                .join("  ")}
+              {saved.newBadges.map((b) => BADGES[b]?.name ?? b).join(", ")}
             </p>
           </section>
         )}
@@ -257,7 +255,9 @@ export function MissionScreen({
               text="A warning is coming from Earth. It takes a while to reach Mars."
             />
             <div className="signal-track" aria-hidden="true">
-              🌍 <span className="signal">📡</span> 🔴
+              <span className="signal-end">Earth</span>
+              <span className="signal" aria-hidden="true" />
+              <span className="signal-end">Mars</span>
             </div>
             <p className="source-note">
               A real message takes between {MARS_MESSAGE_DELAY_MIN.value} and{" "}
@@ -280,12 +280,16 @@ export function MissionScreen({
           />
           <div className="greenhouse-row">
             <span>Greenhouse</span>
-            <span aria-hidden="true">
-              {now.greenhouse > 60 ? "🌱🌱🌱" : now.greenhouse > 30 ? "🌱🌱" : "🥀"}
+            <span>
+              {now.greenhouse > 60
+                ? "Plants healthy"
+                : now.greenhouse > 30
+                  ? "Plants drooping"
+                  : "Plants wilting"}
             </span>
           </div>
           <div className={strength > 0 ? "storm-banner on" : "storm-banner"}>
-            {strength > 0 ? "☀️ STORM! Particles hitting the base." : "Sky is calm."}
+            {strength > 0 ? "Storm! Particles hitting the base." : "Sky is calm."}
           </div>
         </div>
 

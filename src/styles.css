@@ -1,63 +1,18 @@
+/*
+ * Legacy screen styles, kept during the UI redesign while screens migrate to
+ * the token system (tokens.css + base.css). The old variable names below are
+ * aliased to the new design tokens so existing class rules stay consistent
+ * with the new palette until each screen is rebuilt in Group 2.
+ */
 :root {
-  --bg: #0b0d17;
-  --panel: #141829;
-  --panel-2: #1b2036;
-  --ink: #eaf0ff;
-  --ink-dim: #a7b0cf;
-  --accent: #ffd24a;
-  --blue: #3b8ee6;
-  --warn: #ff6b6b;
-  --ok: #4ad295;
-  --radius: 14px;
-}
-
-* {
-  box-sizing: border-box;
-}
-
-html,
-body,
-#root {
-  margin: 0;
-  min-height: 100%;
-}
-
-body {
-  background: var(--bg);
-  color: var(--ink);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  font-size: 18px;
-  line-height: 1.4;
-}
-
-/* Real NASA Mars photo as a dimmed, fixed backdrop behind the whole game. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    linear-gradient(rgba(6, 8, 18, 0.72), rgba(6, 8, 18, 0.9)),
-    url("/img/mars-backdrop.jpg") center / cover no-repeat;
-}
-
-.app {
-  max-width: 520px;
-  margin: 0 auto;
-  padding: 12px 14px 32px;
-}
-
-.app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.app-header h1 {
-  font-size: 1.4rem;
-  letter-spacing: 0.04em;
-  margin: 0;
+  --bg: var(--ground);
+  --panel: var(--surface);
+  --panel-2: var(--surface-raised);
+  --ink-dim: var(--ink-quiet);
+  --blue: var(--shielding);
+  --warn: var(--danger);
+  --ok: var(--life-support);
+  --radius: var(--radius-panel);
 }
 
 /* Every tappable control is at least 48px tall for small fingers. */
@@ -100,58 +55,8 @@ button,
   margin-top: 10px;
 }
 
-/* --- Bolt --- */
-.bolt {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-  background: var(--panel);
-  border-radius: var(--radius);
-  padding: 12px;
-}
-
-.bolt-face {
-  flex: 0 0 64px;
-  width: 64px;
-  height: 64px;
-  border-radius: 18px;
-  background: linear-gradient(160deg, #3b8ee6, #1d4e86);
-  display: grid;
-  place-items: center;
-  box-shadow: inset 0 0 0 3px #9fc6ff;
-}
-
-.bolt-eyes {
-  display: flex;
-  gap: 8px;
-}
-
-.bolt-eye {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #eaf6ff;
-  animation: blink 4s infinite;
-}
-
-@keyframes blink {
-  0%, 92%, 100% { transform: scaleY(1); }
-  95% { transform: scaleY(0.1); }
-}
-
-.bolt-bubble {
-  flex: 1;
-}
-
-.bolt-text {
-  margin: 0 0 8px;
-  font-size: 1.15rem;
-}
-
-.bolt-speak {
-  border: 1px solid #2b3355;
-  background: var(--panel-2);
-  color: var(--ink);
+/* --- legacy Bolt styles removed; Bolt is rebuilt in base.css --- */
+.legacy-unused-bolt {
   border-radius: 10px;
   padding: 6px 10px;
 }
