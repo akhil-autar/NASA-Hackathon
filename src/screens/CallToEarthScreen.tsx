@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Bolt } from "../components/Bolt";
+import { MessageView } from "../components/MessageView";
 import { Stars } from "../components/Stars";
 import { scoreCall, type CallResult } from "../sim/other-missions";
 
@@ -75,6 +76,7 @@ export function CallToEarthScreen({ onBack }: Props) {
         autoSpeak
         text="The air is leaking! Hold the button to wait for Earth's answer, or let go to fix it now on a guess."
       />
+      <MessageView progress={waited / ANSWER_SECONDS} className="call-scene" />
       <div className="gauge">
         <span className="gauge-label">Air — {Math.round(airLeft)}%</span>
         <span className="gauge-bar">
