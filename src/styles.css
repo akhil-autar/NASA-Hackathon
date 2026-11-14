@@ -372,3 +372,182 @@ button,
 .app-footer a {
   color: var(--blue);
 }
+
+/* --- Phase 2: screens --- */
+
+/* Welcome */
+.wheels {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.wheel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wheel-label {
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+}
+
+.wheel-select {
+  min-height: 48px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid #2b3355;
+  border-radius: 10px;
+  font-size: 1rem;
+  padding: 0 8px;
+}
+
+.name-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.name-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.name-field input {
+  flex: 1;
+  min-height: 48px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid #2b3355;
+  border-radius: 10px;
+  padding: 0 10px;
+  font-size: 1rem;
+}
+
+.big-button.ghost {
+  background: transparent;
+  border: 1px solid #2b3355;
+  color: var(--ink);
+}
+
+.parent-note,
+.placeholder-note,
+.source-note {
+  color: var(--ink-dim);
+  font-size: 0.85rem;
+  margin-top: 12px;
+}
+
+.warn-text {
+  color: #ffb4b4;
+  font-size: 0.95rem;
+  margin: 8px 0;
+}
+
+/* Dashboard */
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.dash-card {
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid #2b3355;
+  border-radius: var(--radius);
+  color: var(--ink);
+  padding: 10px;
+  font-size: 0.95rem;
+}
+
+.dash-emoji {
+  font-size: 1.8rem;
+}
+
+/* Time Machine */
+.featured-row {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.featured-slot {
+  flex: 1;
+  background: var(--panel);
+  border: 1px dashed #3b8ee6;
+  border-radius: 10px;
+  color: var(--ink);
+  padding: 10px;
+  font-size: 0.85rem;
+}
+
+.date-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 14px 0;
+}
+
+.date-pick input {
+  min-height: 48px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid #2b3355;
+  border-radius: 10px;
+  padding: 0 10px;
+  font-size: 1rem;
+}
+
+/* Today */
+.archived-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #4a3a14;
+  color: #ffd98a;
+  font-size: 0.7rem;
+  vertical-align: middle;
+}
+
+/* Data page */
+.data-page .disclaimer {
+  color: var(--ink-dim);
+  font-size: 0.85rem;
+}
+
+.dataset-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dataset-list li {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dataset-list a,
+.source-note a {
+  color: var(--blue);
+}

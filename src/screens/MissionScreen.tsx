@@ -8,7 +8,9 @@ import { ResultCards } from "../components/ResultCards";
 import { Word } from "../components/Word";
 import { initialState, runMission } from "../sim/mission";
 import { stormStrengthAtHour } from "../sim/storm";
+import { RealStormCard } from "../components/RealStormCard";
 import type { MissionOutcome, Plan, Storm, TraceRow } from "../sim/types";
+import type { CrewNames } from "../storage/profile";
 
 type Phase = "brief" | "guess" | "plan" | "running" | "result";
 
@@ -17,9 +19,19 @@ const START_PLAN: Plan = { lifeSupport: 0.34, shielding: 0.33, science: 0.33 };
 interface Props {
   storm: Storm;
   seed: number;
+  /** Time Machine missions show the real-storm ending and no dare cards. */
+  isTimeMachine?: boolean;
+  crewNames?: CrewNames | null;
+  onExit?: () => void;
 }
 
-export function MissionScreen({ storm, seed }: Props) {
+export function MissionScreen({
+  storm,
+  seed,
+  isTimeMachine,
+  crewNames,
+  onExit,
+}: Props) {
   const [phase, setPhase] = useState<Phase>("brief");
   const [plan, setPlan] = useState<Plan>(START_PLAN);
   const [guess, setGuess] = useState<"yes" | "no" | null>(null);
@@ -88,6 +100,12 @@ export function MissionScreen({ storm, seed }: Props) {
             until morning. It {outcome.finalState.battery > 0 ? "lasted" : "ran out"}.{" "}
             {guessWasRight ? "You were right!" : "Not this time."}
           </p>
+        )}
+        {isTimeMachine && <RealStormCard storm={storm} />}
+        {onExit && (
+          <button type="button" className="big-button ghost" onClick={onExit}>
+            Back to dashboard
+          </button>
         )}
       </div>
     );
@@ -205,17 +223,17 @@ export function MissionScreen({ storm, seed }: Props) {
 
       <div className="crew-row">
         <CrewCard
-          name={crew.doctor.defaultName}
+          name={crewNames?.doctor ?? crew.doctor.defaultName}
           role="Doctor"
           line={crew.doctor.line}
         />
         <CrewCard
-          name={crew.engineer.defaultName}
+          name={crewNames?.engineer ?? crew.engineer.defaultName}
           role="Engineer"
           line={crew.engineer.line}
         />
         <CrewCard
-          name={crew.scientist.defaultName}
+          name={crewNames?.scientist ?? crew.scientist.defaultName}
           role="Scientist"
           line={crew.scientist.line}
         />
