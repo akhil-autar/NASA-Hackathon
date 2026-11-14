@@ -284,6 +284,13 @@
   min-height: 220px;
 }
 
+/* --- Water wall: the shelter and its growing tank stack --- */
+.water-scene {
+  height: 36vh;
+  min-height: 240px;
+  margin-bottom: calc(var(--space) * 2);
+}
+
 /* Phones: the outpost stays pinned at the top while the child works the
    controls beneath it, so they can watch the base react. The main button is
    fixed at the bottom, within thumb reach. */

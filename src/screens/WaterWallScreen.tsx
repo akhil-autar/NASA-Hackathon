@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { Bolt } from "../components/Bolt";
+import { OutpostView } from "../components/OutpostView";
 import { Stars } from "../components/Stars";
 import { WaterTanks, type TankAssignment } from "../components/WaterTanks";
+import type { OutpostVisual } from "../three/types";
 import { scoreWaterWall } from "../sim/other-missions";
 
 interface Props {
@@ -9,6 +11,28 @@ interface Props {
 }
 
 const TOTAL = 6;
+
+/**
+ * Build what the outpost scene shows for the water wall. The shield-wall tanks
+ * drive the scene's `shielding` value, so the stack of water tanks beside the
+ * shelter grows as the child moves tanks onto the wall. The `shelter` shot
+ * frames the shelter door and that tank stack. Everything else is a calm,
+ * well-powered base so the only thing changing is the wall.
+ */
+function waterVisual(a: TankAssignment): OutpostVisual {
+  return {
+    lifeSupport: 0.4,
+    shielding: a.shieldWall / TOTAL, // tanks on the wall → shelter tank stack
+    science: 0.3,
+    battery: 90, // powered, so the tanks are drawn
+    greenhouse: 70,
+    storm: 0,
+    dust: false,
+    hour: 9, // mid-morning: the shelter is well lit
+    crewSheltered: true,
+    shot: "shelter",
+  };
+}
 
 export function WaterWallScreen({ onBack }: Props) {
   const [a, setA] = useState<TankAssignment>({
@@ -25,6 +49,7 @@ export function WaterWallScreen({ onBack }: Props) {
     return (
       <div className="screen">
         <Stars count={result.stars} />
+        <OutpostView visual={waterVisual(a)} className="water-scene" />
         <section className="card">
           <h3 className="card-title">{result.success ? "The wall held!" : "Something gave way"}</h3>
           <p className="card-body">
@@ -50,6 +75,7 @@ export function WaterWallScreen({ onBack }: Props) {
         autoSpeak
         text="A wall of water is coming. Put the six tanks where they help most. Each tank does one job."
       />
+      <OutpostView visual={waterVisual(a)} className="water-scene" />
       <WaterTanks total={TOTAL} assignment={a} onChange={setA} />
       <button
         type="button"
