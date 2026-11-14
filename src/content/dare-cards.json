@@ -1,0 +1,25 @@
+{
+  "note": "Dare cards for the daily mission only. Each adds one star. Wording may be edited by the team.",
+  "cards": [
+    {
+      "id": "dustyPanels",
+      "name": "Dusty panels",
+      "line": "Dust on the panels. Less solar power today."
+    },
+    {
+      "id": "fuzzyForecast",
+      "name": "Fuzzy forecast",
+      "line": "The warning might be wrong. Watch the sky."
+    },
+    {
+      "id": "boltAsleep",
+      "name": "Bolt is asleep",
+      "line": "Bolt is charging. No hints this time."
+    },
+    {
+      "id": "longHaul",
+      "name": "Long haul",
+      "line": "What is left over carries into a second day."
+    }
+  ]
+}

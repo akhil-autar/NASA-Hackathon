@@ -30,6 +30,17 @@ body {
   line-height: 1.4;
 }
 
+/* Real NASA Mars photo as a dimmed, fixed backdrop behind the whole game. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(rgba(6, 8, 18, 0.72), rgba(6, 8, 18, 0.9)),
+    url("/img/mars-backdrop.jpg") center / cover no-repeat;
+}
+
 .app {
   max-width: 520px;
   margin: 0 auto;
@@ -371,4 +382,490 @@ button,
 
 .app-footer a {
   color: var(--blue);
+}
+
+/* --- Phase 2: screens --- */
+
+/* Welcome */
+.wheels {
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.wheel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wheel-label {
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+}
+
+.wheel-select {
+  min-height: 48px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid #2b3355;
+  border-radius: 10px;
+  font-size: 1rem;
+  padding: 0 8px;
+}
+
+.name-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.name-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.name-field input {
+  flex: 1;
+  min-height: 48px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid #2b3355;
+  border-radius: 10px;
+  padding: 0 10px;
+  font-size: 1rem;
+}
+
+.big-button.ghost {
+  background: transparent;
+  border: 1px solid #2b3355;
+  color: var(--ink);
+}
+
+.parent-note,
+.placeholder-note,
+.source-note {
+  color: var(--ink-dim);
+  font-size: 0.85rem;
+  margin-top: 12px;
+}
+
+.warn-text {
+  color: #ffb4b4;
+  font-size: 0.95rem;
+  margin: 8px 0;
+}
+
+/* Dashboard */
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.dash-card {
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid #2b3355;
+  border-radius: var(--radius);
+  color: var(--ink);
+  padding: 10px;
+  font-size: 0.95rem;
+}
+
+.dash-emoji {
+  font-size: 1.8rem;
+}
+
+/* Time Machine */
+.featured-row {
+  display: flex;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.featured-slot {
+  flex: 1;
+  background: var(--panel);
+  border: 1px dashed #3b8ee6;
+  border-radius: 10px;
+  color: var(--ink);
+  padding: 10px;
+  font-size: 0.85rem;
+}
+
+.date-pick {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 14px 0;
+}
+
+.date-pick input {
+  min-height: 48px;
+  background: var(--panel);
+  color: var(--ink);
+  border: 1px solid #2b3355;
+  border-radius: 10px;
+  padding: 0 10px;
+  font-size: 1rem;
+}
+
+/* Today */
+.archived-tag {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #4a3a14;
+  color: #ffd98a;
+  font-size: 0.7rem;
+  vertical-align: middle;
+}
+
+/* Data page */
+.data-page .disclaimer {
+  color: var(--ink-dim);
+  font-size: 0.85rem;
+}
+
+.dataset-list {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dataset-list li {
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dataset-list a,
+.source-note a {
+  color: var(--blue);
+}
+
+/* --- Credited NASA images --- */
+.credited-image {
+  margin: 12px 0;
+}
+
+.credited-image img {
+  width: 100%;
+  display: block;
+  border-radius: var(--radius);
+  border: 1px solid #2b3355;
+}
+
+.credited-image figcaption {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--ink-dim);
+}
+
+.credited-image.base-map img {
+  max-height: 180px;
+  object-fit: cover;
+}
+
+.credited-image.mission-scene img {
+  max-height: 120px;
+  object-fit: cover;
+}
+
+.credit-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.85rem;
+}
+
+.credit-list a {
+  color: var(--blue);
+}
+
+/* --- Phase 3: depth --- */
+
+/* Rover track */
+.rover-track {
+  margin: 14px 0;
+}
+
+.rover-rail {
+  position: relative;
+  height: 28px;
+  background: #0c0f1d;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid #2b3355;
+}
+
+.rover-safe {
+  position: absolute;
+  inset: 0 auto 0 0;
+  background: rgba(74, 210, 149, 0.25);
+}
+
+.rover-dot {
+  position: absolute;
+  top: 2px;
+  transform: translateX(-50%);
+  font-size: 1.2rem;
+}
+
+.rover-range {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 8px;
+}
+
+.rover-note {
+  font-size: 0.9rem;
+  color: var(--ink-dim);
+}
+
+.rover-note.warn {
+  color: #ffb4b4;
+}
+
+/* Dare cards */
+.dare-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dare-chip {
+  min-height: 48px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid #2b3355;
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 0.85rem;
+}
+
+.dare-chip.on {
+  background: #4a3a14;
+  border-color: #ffd24a;
+  color: #ffd98a;
+}
+
+/* Greenhouse + late warning */
+.greenhouse-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  color: var(--ink-dim);
+  font-size: 0.9rem;
+}
+
+.late-warning {
+  background: var(--panel-2);
+  border-radius: var(--radius);
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+.signal-track {
+  font-size: 1.6rem;
+  text-align: center;
+  margin: 8px 0;
+  letter-spacing: 6px;
+}
+
+.signal {
+  display: inline-block;
+  animation: travel 1.6s linear infinite;
+}
+
+@keyframes travel {
+  from { transform: translateX(-28px); opacity: 0.4; }
+  to { transform: translateX(28px); opacity: 1; }
+}
+
+/* Rewind + compare */
+.rewind-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.compare {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.compare-col {
+  flex: 1;
+  text-align: center;
+  background: var(--panel-2);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+/* Stars / badges / log */
+.stars-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 1.4rem;
+}
+
+.badge {
+  background: var(--panel-2);
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+
+.log-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.9rem;
+}
+
+.log-list li {
+  margin-bottom: 4px;
+}
+
+/* Settings */
+.setting-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid #2b3355;
+  border-radius: var(--radius);
+  color: var(--ink);
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.setting-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.setting-hint {
+  font-size: 0.8rem;
+  color: var(--ink-dim);
+}
+
+.switch {
+  flex: 0 0 auto;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #2b3050;
+  color: var(--ink-dim);
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+
+.switch.on {
+  background: var(--ok);
+  color: #03251a;
+}
+
+/* --- Phase 4: more missions and audiences --- */
+
+/* Water tanks */
+.water-tanks {
+  margin: 12px 0;
+}
+
+.water-left {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.tank-job {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--panel);
+  border-radius: var(--radius);
+  padding: 10px;
+  margin-bottom: 8px;
+}
+
+.tank-stepper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tank-btn {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  border: 1px solid #2b3355;
+  background: var(--panel-2);
+  color: var(--ink);
+  font-size: 1.4rem;
+}
+
+.tank-count {
+  min-width: 24px;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+/* Hold-to-wait button */
+.hold-button {
+  touch-action: none;
+  user-select: none;
+}
+
+/* Class mode */
+.class-storm-list {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.class-results {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Simplified page */
+.simple-list {
+  padding-left: 18px;
+}
+
+.simple-list li {
+  margin-bottom: 10px;
 }
