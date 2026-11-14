@@ -26,25 +26,40 @@ button,
   cursor: pointer;
 }
 
+/* Legacy button, restyled to match the new system (round, token colours).
+   Secondary screens still use this until each is migrated to <Button />. */
 .big-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space);
   width: 100%;
-  margin-top: 14px;
-  padding: 14px;
+  min-height: 48px;
+  margin-top: var(--space);
+  padding: 0 calc(var(--space) * 3);
   border: none;
-  border-radius: var(--radius);
-  background: var(--blue);
-  color: white;
+  border-radius: var(--radius-button);
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: var(--size-body);
   font-weight: 700;
+  cursor: pointer;
 }
 
 .big-button.go {
-  background: var(--ok);
-  color: #03251a;
-  font-size: 1.3rem;
+  background: var(--accent);
+  color: var(--ink-on-accent);
+}
+
+.big-button.ghost {
+  background: transparent;
+  border: 1px solid var(--surface-raised);
+  color: var(--ink);
 }
 
 .sound-toggle {
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
   border-radius: var(--radius);
   background: var(--panel);
   color: var(--ink);
@@ -68,26 +83,7 @@ button,
   margin-top: 12px;
 }
 
-.crew-card {
-  flex: 1;
-  background: var(--panel);
-  border-radius: var(--radius);
-  padding: 10px;
-  text-align: center;
-  font-size: 0.85rem;
-}
-
-.crew-portrait {
-  width: 48px;
-  height: 48px;
-  margin: 0 auto 6px;
-  border-radius: 50%;
-  background: linear-gradient(160deg, #c1623a, #7c2d12);
-  display: grid;
-  place-items: center;
-  font-size: 1.4rem;
-  font-weight: 800;
-}
+/* .crew-card and .crew-portrait are defined in base.css (new crew portraits). */
 
 .crew-role {
   display: block;
@@ -174,7 +170,7 @@ button,
   display: block;
   height: 14px;
   border-radius: 8px;
-  background: #0c0f1d;
+  background: var(--ground);
   overflow: hidden;
 }
 
@@ -193,14 +189,14 @@ button,
   margin-top: 8px;
   padding: 8px;
   border-radius: 10px;
-  background: #0c0f1d;
+  background: var(--ground);
   color: var(--ink-dim);
   text-align: center;
 }
 
 .storm-banner.on {
-  background: #4a1414;
-  color: #ffd0d0;
+  background: var(--surface-raised);
+  color: var(--danger);
   font-weight: 700;
 }
 
@@ -249,7 +245,7 @@ button,
 }
 
 .star.off {
-  color: #2b3050;
+  color: var(--surface-raised);
 }
 
 /* --- Word meanings --- */
@@ -314,7 +310,7 @@ button,
   min-height: 48px;
   background: var(--panel);
   color: var(--ink);
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
   border-radius: 10px;
   font-size: 1rem;
   padding: 0 8px;
@@ -339,16 +335,10 @@ button,
   min-height: 48px;
   background: var(--panel);
   color: var(--ink);
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
   border-radius: 10px;
   padding: 0 10px;
   font-size: 1rem;
-}
-
-.big-button.ghost {
-  background: transparent;
-  border: 1px solid #2b3355;
-  color: var(--ink);
 }
 
 .parent-note,
@@ -360,7 +350,7 @@ button,
 }
 
 .warn-text {
-  color: #ffb4b4;
+  color: var(--danger);
   font-size: 0.95rem;
   margin: 8px 0;
 }
@@ -382,7 +372,7 @@ button,
   gap: 8px;
   text-align: center;
   background: var(--panel);
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
   border-radius: var(--radius);
   color: var(--ink);
   padding: 10px;
@@ -403,7 +393,7 @@ button,
 .featured-slot {
   flex: 1;
   background: var(--panel);
-  border: 1px dashed #3b8ee6;
+  border: 1px dashed var(--shielding);
   border-radius: 10px;
   color: var(--ink);
   padding: 10px;
@@ -421,7 +411,7 @@ button,
   min-height: 48px;
   background: var(--panel);
   color: var(--ink);
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
   border-radius: 10px;
   padding: 0 10px;
   font-size: 1rem;
@@ -433,8 +423,8 @@ button,
   margin-left: 8px;
   padding: 2px 8px;
   border-radius: 999px;
-  background: #4a3a14;
-  color: #ffd98a;
+  background: var(--surface-raised);
+  color: var(--accent);
   font-size: 0.7rem;
   vertical-align: middle;
 }
@@ -477,7 +467,7 @@ button,
   width: 100%;
   display: block;
   border-radius: var(--radius);
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
 }
 
 .credited-image figcaption {
@@ -516,10 +506,10 @@ button,
 .rover-rail {
   position: relative;
   height: 28px;
-  background: #0c0f1d;
+  background: var(--ground);
   border-radius: 14px;
   overflow: hidden;
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
 }
 
 .rover-safe {
@@ -547,7 +537,7 @@ button,
 }
 
 .rover-note.warn {
-  color: #ffb4b4;
+  color: var(--danger);
 }
 
 /* Dare cards */
@@ -561,16 +551,16 @@ button,
   min-height: 48px;
   padding: 8px 12px;
   border-radius: 999px;
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
   background: var(--panel);
   color: var(--ink);
   font-size: 0.85rem;
 }
 
 .dare-chip.on {
-  background: #4a3a14;
-  border-color: #ffd24a;
-  color: #ffd98a;
+  background: var(--surface-raised);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* Greenhouse + late warning */
@@ -668,7 +658,7 @@ button,
   gap: 12px;
   text-align: left;
   background: var(--panel);
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
   border-radius: var(--radius);
   color: var(--ink);
   padding: 12px;
@@ -690,7 +680,7 @@ button,
   flex: 0 0 auto;
   padding: 6px 12px;
   border-radius: 999px;
-  background: #2b3050;
+  background: var(--surface-raised);
   color: var(--ink-dim);
   font-weight: 700;
   font-size: 0.8rem;
@@ -698,7 +688,7 @@ button,
 
 .switch.on {
   background: var(--ok);
-  color: #03251a;
+  color: var(--ink-on-accent);
 }
 
 /* --- Phase 4: more missions and audiences --- */
@@ -733,7 +723,7 @@ button,
   width: 48px;
   height: 48px;
   border-radius: 10px;
-  border: 1px solid #2b3355;
+  border: 1px solid var(--surface-raised);
   background: var(--panel-2);
   color: var(--ink);
   font-size: 1.4rem;

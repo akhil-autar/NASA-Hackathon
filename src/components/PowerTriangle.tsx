@@ -89,66 +89,104 @@ export function PowerTriangle({ plan, battery, onChange, disabled }: Props) {
     pointToShares(e.clientX, e.clientY);
   };
 
+  // Arrow keys nudge power between corners in 10% steps (R5.6).
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (disabled) return;
+    const p = { ...plan };
+    const move = (from: keyof Plan, to: keyof Plan) => {
+      if (p[from] >= 0.1) {
+        p[from] = Math.round((p[from] - 0.1) * 10) / 10;
+        p[to] = Math.round((p[to] + 0.1) * 10) / 10;
+      }
+    };
+    if (e.key === "ArrowUp") move("science", "lifeSupport");
+    else if (e.key === "ArrowDown") move("lifeSupport", "science");
+    else if (e.key === "ArrowLeft") move("science", "shielding");
+    else if (e.key === "ArrowRight") move("shielding", "science");
+    else return;
+    e.preventDefault();
+    onChange(p);
+  };
+
   const pct = (n: number) => `${Math.round(n * 100)}%`;
 
   return (
     <div className="triangle-wrap">
       <svg
         ref={svgRef}
-        viewBox="0 0 100 100"
+        viewBox="0 0 100 104"
         className="triangle-svg"
-        role="group"
-        aria-label="Power Triangle. Drag the dot to share power."
+        role="slider"
+        tabIndex={disabled ? -1 : 0}
+        aria-label="Power Triangle. Drag or use arrow keys to share power."
+        aria-valuetext={`Life support ${pct(plan.lifeSupport)}, shielding ${pct(
+          plan.shielding,
+        )}, science ${pct(plan.science)}`}
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove}
+        onKeyDown={onKeyDown}
       >
         {/* Battery fill: the triangle visibly fills from the bottom. */}
         <defs>
           <clipPath id="tri-clip">
-            <polygon points="50,8 10,88 90,88" />
+            <polygon points="50,10 10,90 90,90" />
           </clipPath>
         </defs>
         <g clipPath="url(#tri-clip)">
-          <rect x="0" y="0" width="100" height="100" fill="#11152b" />
+          <rect x="0" y="0" width="100" height="104" fill="var(--surface)" />
           <rect
             x="0"
             y={100 - battery}
             width="100"
-            height={battery}
-            fill="#1d6fb8"
-            opacity="0.5"
+            height={battery + 4}
+            fill="var(--shielding)"
+            opacity="0.35"
           />
         </g>
         <polygon
-          points="50,8 10,88 90,88"
+          points="50,10 10,90 90,90"
           fill="none"
-          stroke="#8fb7ff"
-          strokeWidth="1.2"
+          stroke="var(--ink-quiet)"
+          strokeWidth="1"
         />
+        {/* Corner markers in each corner's colour */}
+        <circle cx="50" cy="10" r="3" fill="var(--life-support)" />
+        <circle cx="10" cy="90" r="3" fill="var(--shielding)" />
+        <circle cx="90" cy="90" r="3" fill="var(--science)" />
         {/* Corner labels */}
-        <text x="50" y="5" className="tri-label" textAnchor="middle">
-          Life Support
+        <text x="50" y="6" className="tri-label" textAnchor="middle" fill="var(--life-support)">
+          Life support
         </text>
-        <text x="8" y="96" className="tri-label" textAnchor="start">
+        <text x="8" y="100" className="tri-label" textAnchor="start" fill="var(--shielding)">
           Shielding
         </text>
-        <text x="92" y="96" className="tri-label" textAnchor="end">
+        <text x="92" y="100" className="tri-label" textAnchor="end" fill="var(--science)">
           Science
         </text>
-        {/* The dot */}
+        {/* The accent dot with a spring follow */}
         <circle
+          className="tri-dot"
           cx={dot.x}
           cy={dot.y}
-          r="5"
-          fill="#ffd24a"
-          stroke="#1b1e33"
-          strokeWidth="1.2"
+          r="5.5"
+          fill="var(--accent)"
+          stroke="var(--ground)"
+          strokeWidth="1.5"
         />
       </svg>
-      <div className="triangle-shares" aria-hidden="false">
-        <span>Life Support {pct(plan.lifeSupport)}</span>
-        <span>Shielding {pct(plan.shielding)}</span>
-        <span>Science {pct(plan.science)}</span>
+      <div className="triangle-shares">
+        <span className="tri-share">
+          <span className="tri-swatch" style={{ background: "var(--life-support)" }} />
+          Life support {pct(plan.lifeSupport)}
+        </span>
+        <span className="tri-share">
+          <span className="tri-swatch" style={{ background: "var(--shielding)" }} />
+          Shielding {pct(plan.shielding)}
+        </span>
+        <span className="tri-share">
+          <span className="tri-swatch" style={{ background: "var(--science)" }} />
+          Science {pct(plan.science)}
+        </span>
         <span className="battery-readout">Battery {Math.round(battery)}%</span>
       </div>
     </div>

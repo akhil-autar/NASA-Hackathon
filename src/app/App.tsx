@@ -210,6 +210,7 @@ export function App() {
         <DashboardScreen
           profile={profile}
           onGo={goRoute}
+          onPlayStorm={(s) => playStorm(s, "daily")}
           onPlayBirthday={(s) => playStorm(s, "birthday")}
         />
       );
