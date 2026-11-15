@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useLayoutEffect } from "react";
 import { toStorm } from "../data/to-storm";
 import type { ArchivedStorm } from "../data/archive-types";
 import type { Storm } from "../sim/types";
@@ -17,7 +17,7 @@ import { getArchive } from "../data/archive";
 import { TodayScreen } from "../screens/TodayScreen";
 import { WelcomeScreen } from "../screens/WelcomeScreen";
 import { TopBar, type TopBarLink } from "../components/TopBar";
-import { setSoundOn, setSpeechLang } from "../speech/speak";
+import { setSoundOn, setSpeechLang, stopSpeech } from "../speech/speak";
 import { LANGS, LangContext, SPEECH_LANG, makeT } from "../i18n";
 import { loadProfile, saveProfile, type Profile } from "../storage/profile";
 import { loadSettings, saveSettings, type Settings } from "../storage/settings";
@@ -65,6 +65,12 @@ export function App() {
   const [view, setView] = useState<View>(() =>
     loadProfile().onboarded ? { name: "dashboard" } : { name: "welcome" },
   );
+
+  // Moving to another screen stops Bolt, so old lines never play over the new
+  // screen. This runs before the new screen's own line starts.
+  useLayoutEffect(() => {
+    stopSpeech();
+  }, [view]);
   const [lastArchived, setLastArchived] = useState<ArchivedStorm | null>(null);
 
   const updateSettings = (patch: Partial<Settings>) => {

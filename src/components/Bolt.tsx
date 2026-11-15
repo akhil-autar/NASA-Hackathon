@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { speak } from "../speech/speak";
-import { Icon } from "./Icon";
-import { useT } from "../i18n";
+import { speak, speakQueued, useSpeaking } from "../speech/speak";
+import { AudioButton } from "./AudioButton";
 
 export type BoltExpression = "happy" | "thinking" | "worried" | "asleep";
 
@@ -10,6 +9,11 @@ interface Props {
   text: string;
   /** Say it aloud automatically when it changes. */
   autoSpeak?: boolean;
+  /**
+   * Wait for Bolt to finish the current line instead of cutting it off.
+   * Use for background updates (the mission clock), not for new screens.
+   */
+  queue?: boolean;
   /** Bolt's face state. */
   expression?: BoltExpression;
   /** Optional rich content (e.g. tappable words) shown instead of plain text. */
@@ -20,19 +24,21 @@ interface Props {
 export function Bolt({
   text,
   autoSpeak,
+  queue,
   expression = "happy",
   children,
 }: Props) {
   const [blink, setBlink] = useState(false);
-  const [speaking, setSpeaking] = useState(false);
+  const speaking = useSpeaking();
   const [mouthOpen, setMouthOpen] = useState(false);
   const asleep = expression === "asleep";
-  const t = useT();
 
   // Speak the line when it changes.
   useEffect(() => {
-    if (autoSpeak && !asleep) speak(text);
-  }, [text, autoSpeak, asleep]);
+    if (!autoSpeak || asleep) return;
+    if (queue) speakQueued(text);
+    else speak(text);
+  }, [text, autoSpeak, asleep, queue]);
 
   // Blink on an interval (not while asleep).
   useEffect(() => {
@@ -44,15 +50,8 @@ export function Bolt({
     return () => window.clearInterval(id);
   }, [asleep]);
 
-  // Watch the browser's speech so the mouth moves while Bolt talks.
+  // The mouth moves while Bolt talks.
   const mouthTimer = useRef<number | null>(null);
-  useEffect(() => {
-    const poll = window.setInterval(() => {
-      const isSpeaking = !!window.speechSynthesis?.speaking;
-      setSpeaking(isSpeaking);
-    }, 120);
-    return () => window.clearInterval(poll);
-  }, []);
   useEffect(() => {
     if (!speaking) {
       setMouthOpen(false);
@@ -74,17 +73,7 @@ export function Bolt({
       />
       <div className="bolt-bubble">
         <p className="bolt-text">{children ?? text}</p>
-        {!asleep && (
-          <button
-            type="button"
-            className="btn btn-secondary bolt-speak"
-            onClick={() => speak(text)}
-            aria-label={t("common.hearAria")}
-          >
-            <Icon name="replay" />
-            {t("common.hearIt")}
-          </button>
-        )}
+        {!asleep && <AudioButton text={text} className="bolt-speak" />}
       </div>
     </div>
   );

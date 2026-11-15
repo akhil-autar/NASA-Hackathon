@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import glossary from "../content/glossary.json";
-import { speak } from "../speech/speak";
+import { speak, stopSpeech } from "../speech/speak";
 import { useLang } from "../i18n";
 
 // Bahasa Melayu meanings for the tappable science words.
@@ -55,6 +55,7 @@ export function Word({ term, children }: Props) {
           const next = !open;
           setOpen(next);
           if (next) speak(meaning);
+          else stopSpeech();
         }}
         aria-expanded={open}
       >

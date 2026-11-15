@@ -8,7 +8,8 @@ type IconName =
   | "replay"
   | "menu"
   | "share"
-  | "star";
+  | "star"
+  | "stop";
 
 interface Props {
   name: IconName;
@@ -58,6 +59,11 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M12 16V4" />
       <path d="M8 8l4-4 4 4" />
       <path d="M5 14v5h14v-5" />
+    </>
+  ),
+  stop: (
+    <>
+      <rect x="6" y="6" width="12" height="12" rx="2" />
     </>
   ),
   star: (

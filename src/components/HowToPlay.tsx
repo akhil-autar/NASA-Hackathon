@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTx } from "../i18n";
-import { speak } from "../speech/speak";
+import { holdSpeech, speak, stopSpeech } from "../speech/speak";
+import { AudioButton } from "./AudioButton";
 
 interface Props {
   onDone: () => void;
@@ -11,7 +12,7 @@ export function HowToPlay({ onDone }: Props) {
   const tx = useTx();
   const [i, setI] = useState(0);
 
-  const cards = [
+  const cards: { art: string; title: string; text?: string; lines?: string[] }[] = [
     {
       art: "☀️ 💥 ➡️ 🔴",
       title: tx("The Sun sends storms", "Matahari menghantar ribut"),
@@ -31,10 +32,15 @@ export function HowToPlay({ onDone }: Props) {
     {
       art: "⚡⚡⚡⚡⚡⚡⚡⚡⚡⚡",
       title: tx("Share 10 power cubes", "Bahagikan 10 kiub kuasa"),
-      text: tx(
-        "🌱 Air & warmth keeps the crew warm. 🛡️ The shelter blocks the storm. 🔬 Science makes discoveries. More for one job means less for the others!",
-        "🌱 Udara & kehangatan memastikan kru hangat. 🛡️ Tempat perlindungan menghalang ribut. 🔬 Sains membuat penemuan. Lebih untuk satu tugas bermaksud kurang untuk yang lain!",
-      ),
+      lines: [
+        tx("Air & warmth keeps the crew warm.", "Udara & kehangatan memastikan kru hangat."),
+        tx("The shelter blocks the storm.", "Tempat perlindungan menghalang ribut."),
+        tx("Science makes discoveries.", "Sains membuat penemuan."),
+        tx(
+          "More for one job means less for the others!",
+          "Lebih untuk satu tugas bermaksud kurang untuk yang lain!",
+        ),
+      ],
     },
     {
       art: "🌡️ ☢️ 🔬 = ⭐⭐⭐",
@@ -47,10 +53,22 @@ export function HowToPlay({ onDone }: Props) {
   ];
   const card = cards[i];
   const last = i === cards.length - 1;
+  const body = card.lines ? card.lines.join(" ") : (card.text ?? "");
+  const spoken = `${card.title}. ${body}`;
+
+  // While the guide is open, the screen behind it stays quiet. Each card is
+  // read when it appears, and Bolt stops as soon as the guide closes.
+  useEffect(() => {
+    const release = holdSpeech();
+    return () => {
+      stopSpeech();
+      release();
+    };
+  }, []);
 
   useEffect(() => {
-    speak(`${card.title}. ${card.text}`);
-  }, [card.title, card.text]);
+    speak(spoken);
+  }, [spoken]);
 
   return (
     <div className="howto" role="dialog" aria-modal="true" aria-labelledby="howto-title">
@@ -59,7 +77,16 @@ export function HowToPlay({ onDone }: Props) {
           {card.art}
         </div>
         <h2 id="howto-title">{card.title}</h2>
-        <p>{card.text}</p>
+        {card.lines ? (
+          <ul className="howto-lines">
+            {card.lines.map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+          </ul>
+        ) : (
+          <p>{card.text}</p>
+        )}
+        <AudioButton text={spoken} className="howto-audio" />
         <div className="howto-dots" aria-hidden="true">
           {cards.map((_, j) => (
             <span key={j} className={j === i ? "on" : ""} />

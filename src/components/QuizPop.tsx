@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import type { QuizQuestion } from "../content/quiz";
 import { useLang, useTx } from "../i18n";
-import { speak } from "../speech/speak";
+import { holdSpeech, speak, speakQueued, stopSpeech } from "../speech/speak";
+import { AudioButton } from "./AudioButton";
 
 interface Props {
   question: QuizQuestion;
@@ -15,8 +16,21 @@ export function QuizPop({ question, onDone }: Props) {
   const [picked, setPicked] = useState<number | null>(null);
   const right = picked === question.answer;
 
+  const askLine = `${tx("Quick question!", "Soalan pantas!")} ${question.q[lang]}`;
+  const answerLine =
+    picked === null
+      ? ""
+      : `${right ? tx("Yes! Brain star!", "Ya! Bintang otak!") : tx("Good try!", "Cubaan yang bagus!")} ${question.why[lang]}`;
+
+  // The question waits for Bolt to finish his sentence, then the mission
+  // stays quiet until the question closes. Leaving it stops Bolt.
   useEffect(() => {
-    speak(`${tx("Quick question!", "Soalan pantas!")} ${question.q[lang]}`);
+    const release = holdSpeech();
+    speakQueued(askLine, { overHold: true });
+    return () => {
+      stopSpeech();
+      release();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -31,6 +45,7 @@ export function QuizPop({ question, onDone }: Props) {
     <div className="quiz-pop panel" role="dialog" aria-labelledby="quiz-q">
       <span className="quiz-pop-tag">🤖 {tx("Bolt's quick question", "Soalan pantas Bolt")}</span>
       <h3 id="quiz-q">{question.q[lang]}</h3>
+      <AudioButton text={picked === null ? askLine : answerLine} className="quiz-audio" />
       <div className="quiz-options">
         {question.options.map((o, i) => {
           const state =

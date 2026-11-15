@@ -4,6 +4,7 @@ import type { AvatarLook } from "../avatar/look";
 import { useT } from "../i18n";
 import type { Explanation } from "../sim/explain";
 import { speak } from "../speech/speak";
+import { AudioButton } from "./AudioButton";
 import { say } from "./ResultCards";
 
 interface Props {
@@ -45,6 +46,7 @@ export function GameOver({ explanation: x, look, onTryAgain, onDetails }: Props)
         </h2>
         <h3>{t("go.how")}</h3>
         <p className="game-over-cause">{cause}</p>
+        <AudioButton text={`${t("go.title")}. ${cause}`} />
         <p className="quiet">{say(t, x.why)}</p>
         {radiationCause && (
           <p className="game-over-dose">{t("go.dose", { dose: x.dose, limit: x.limit })}</p>

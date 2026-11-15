@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { APP_NAME } from "../config";
 import { Icon } from "./Icon";
+import { stopSpeech, useSpeaking } from "../speech/speak";
 import { LANGS, useT, type Lang } from "../i18n";
 
 export interface TopBarLink {
@@ -26,6 +27,7 @@ interface Props {
 export function TopBar({ links, soundOn, onToggleSound, onHome, lang, onLang }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const t = useT();
+  const speaking = useSpeaking();
   const nextLang = LANGS[(LANGS.findIndex((l) => l.id === lang) + 1) % LANGS.length];
 
   return (
@@ -73,6 +75,17 @@ export function TopBar({ links, soundOn, onToggleSound, onHome, lang, onLang }: 
               </span>
             ))}
           </button>
+          {speaking && (
+            <button
+              type="button"
+              className="topbar-stop"
+              onClick={stopSpeech}
+              aria-label={lang === "ms" ? "Hentikan audio" : "Stop audio"}
+            >
+              <Icon name="stop" />
+              <span>{lang === "ms" ? "Berhenti" : "Stop"}</span>
+            </button>
+          )}
           <button
             type="button"
             className="topbar-sound"

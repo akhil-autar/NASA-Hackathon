@@ -32,6 +32,17 @@ const DATASETS = [
     link: "https://www.nasa.gov/wp-content/uploads/2023/03/radiation-protection-technical-brief-ochmo.pdf",
   },
   {
+    name: "Kp index (GFZ Potsdam, Germany)",
+    drives:
+      "The Earth Impact card: the real Kp reading for the flare's day and the 3 days after, fetched live from GFZ's official web service. Licence CC BY 4.0. Matzka et al. (2021), Geomagnetic Kp index V1.0, GFZ Data Services.",
+    link: "https://doi.org/10.5880/Kp.0001",
+  },
+  {
+    name: "NOAA space weather scales",
+    drives: "The plain words for each Kp level on the Earth Impact card (Kp 5 = G1 up to Kp 9 = G5).",
+    link: "https://www.swpc.noaa.gov/noaa-scales-explanation",
+  },
+  {
     name: "OSDR",
     drives: "'Real astronauts' facts, written by the team with study links.",
     link: "https://osdr.nasa.gov/",

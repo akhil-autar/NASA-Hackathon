@@ -29,6 +29,7 @@ import { MessageView } from "../components/MessageView";
 import { OutpostView } from "../components/OutpostView";
 import { PowerTriangle } from "../components/PowerTriangle";
 import { RealStormCard } from "../components/RealStormCard";
+import { EarthImpactCard } from "../components/EarthImpactCard";
 import { ResultCards } from "../components/ResultCards";
 import { RoverTrack } from "../components/RoverTrack";
 import { ShareCard } from "../components/ShareCard";
@@ -410,6 +411,7 @@ export function MissionScreen({
           )}
         </section>
 
+        {!dustStorm && <EarthImpactCard storm={storm} showNumbers={showNumbers} />}
         {isTimeMachine && <RealStormCard storm={storm} />}
 
         <div className="button-row">
@@ -868,7 +870,8 @@ export function MissionScreen({
       <div className="mission-bolt">
         <Bolt
           key={boltText}
-          autoSpeak={!boltAsleep}
+          autoSpeak={!boltAsleep && !showHowTo && quizState !== "open"}
+          queue={running}
           expression={boltAsleep ? "asleep" : boltExpression}
           text={boltText}
         >

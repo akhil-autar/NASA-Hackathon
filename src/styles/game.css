@@ -1049,3 +1049,191 @@
     display: none;
   }
 }
+
+/* --- Audio: Hear it / Stop, and the top-bar Stop --- */
+.audio-button.is-speaking {
+  background: var(--ink);
+  color: var(--ground);
+}
+
+.topbar-stop {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space);
+  min-height: 48px;
+  padding: 0 calc(var(--space) * 2);
+  background: var(--ink);
+  color: var(--ground);
+  border: none;
+  border-radius: var(--radius-button);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  animation: rise-in 200ms ease-out backwards;
+}
+
+.howto-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 0.75);
+  text-align: left;
+}
+
+.howto-lines li {
+  padding: var(--space) calc(var(--space) * 1.5);
+  background: var(--surface-raised);
+  border-radius: var(--radius-panel);
+}
+
+.howto-audio,
+.quiz-audio {
+  align-self: center;
+}
+
+@media (max-width: 599px) {
+  .topbar-stop span {
+    display: none;
+  }
+}
+
+/* --- Earth Impact card (Kp from GFZ) --- */
+.earth-card {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--space) * 1.5);
+}
+
+.earth-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: calc(var(--space) * 2);
+  align-items: center;
+}
+
+@media (min-width: 600px) {
+  .earth-layout {
+    grid-template-columns: 180px minmax(0, 1fr);
+  }
+}
+
+.earth-svg {
+  width: 180px;
+  height: 180px;
+  justify-self: center;
+}
+
+.aurora-ring {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: aurora-in 900ms cubic-bezier(0.2, 0.8, 0.2, 1) both, aurora-glow 3.2s ease-in-out 900ms infinite;
+}
+
+@keyframes aurora-in {
+  from { opacity: 0; transform: scale(0.4); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes aurora-glow {
+  0%, 100% { stroke-opacity: 0.85; }
+  50% { stroke-opacity: 0.55; }
+}
+
+.earth-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space);
+}
+
+.earth-text .card-body {
+  margin: 0;
+}
+
+.earth-kp {
+  display: flex;
+  align-items: baseline;
+  gap: calc(var(--space) * 1.5);
+  flex-wrap: wrap;
+  margin: 0;
+}
+
+.earth-kp-number {
+  font-size: var(--size-display);
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.earth-kp-title {
+  font-size: var(--size-heading);
+  font-weight: 700;
+}
+
+.kp-meter {
+  display: grid;
+  grid-template-columns: repeat(9, 1fr);
+  gap: 4px;
+  max-width: 420px;
+}
+
+.kp-step {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  border-radius: 6px;
+  background: var(--surface-raised);
+  color: var(--ink-quiet);
+  font-size: var(--size-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.kp-step.on {
+  color: var(--ground);
+  font-weight: 700;
+  animation: kp-fill 300ms ease-out backwards;
+}
+
+.kp-step.on.low { background: var(--life-support); }
+.kp-step.on.mid { background: var(--accent); }
+.kp-step.on.high { background: var(--danger); }
+
+@keyframes kp-fill {
+  from { opacity: 0; transform: scaleY(0.3); }
+  to { opacity: 1; transform: scaleY(1); }
+}
+
+.earth-source {
+  margin: 0;
+  font-size: var(--size-small);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora-ring,
+  .kp-step.on {
+    animation: none;
+  }
+}
+
+/* The Stop icon follows the button's text colour. */
+.audio-button .icon,
+.topbar-stop .icon {
+  stroke: currentColor;
+}
+.btn.audio-button.is-speaking {
+  background: var(--ink);
+  color: var(--ground);
+}
+.earth-text .audio-button {
+  align-self: flex-start;
+}
+
+/* Ten power cubes fit inside the guide card. */
+.howto-art {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  letter-spacing: 0;
+  font-size: clamp(1.4rem, 4.6vw, 2.2rem);
+}
